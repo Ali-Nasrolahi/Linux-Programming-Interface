@@ -102,6 +102,95 @@ This filename-plus-reference association is called a **link**.
 
 Like a normal link, a **symbolic link** provides an alternative name for a file.
 
-But whereas a *normal link* is a *filename-plus-pointer* entry in a directory list, a symbolic link is a specially *marked file* containing the *name* of **another file**.
+But whereas a *normal link* is ai *filename-plus-pointer* entry in a directory list, a symbolic link is a specially *marked file* containing the *name* of **another file**.
+
+> If a symbolic link refers to a file that doesn’t exist, it is said to be a *dangling* link.
 
 > Often **hard link** and **soft link** are used as alternative terms for normal and symbolic links.
+
+#### Filenames
+
+- On most Linux file systems, filenames can be up to *255* characters(Bytes) long.
+
+- Filenames may contain any characters except slashes ( **/** ) and null characters ( **\0** ).
+
+- We should also avoid filenames beginning with a hyphen ( - ), since such filenames may be mistaken for options when specified in a shell command.
+
+#### Pathnames
+
+- An absolute pathname begins with a slash ( / ) and specifies the location of a file with respect to the root directory.
+
+> Such as: /home/user/Wassup.txt
+
+- A relative pathname specifies the location of a file relative to a process’s current working directory (see below), and is distinguished from an absolute pathname by the absence of an initial slash.
+
+> Such as: ../root/RemoveMePls.dump
+
+BTW: Don't forget that pathnames must stay in 4096 bytes limit. (this *includes* filenames)
+
+#### File ownership and permissions
+
+ Each file has an associated user ID and group ID that define the owner of the file and the group to which it belongs.
+
+For the purpose of accessing a file, the system divides users into three categories:
+
+- The owner of the file (*user*)
+
+- Users who are members of the group matching the file’s group ID (*group*)
+
+- The rest of the world (*other*)
+
+**Three** permission bits may be set for each of these categories of use (total of 9 bits)
+
+- **Read permission**: allows the contents of the file to be read.
+
+- **Write permission**: allows modification of the contents of the file;
+
+- **Execute permission**: allows execution of the file.
+
+Meaning of these are slightly different for directories
+
+- **Read permission**: allows the contents of (i.e., the filenames in) the directory to be *listed*.
+
+- **Write permission**: allows the contents of the directory to be changed (i.e., filenames can be added, removed, and changed).
+
+- **Execute permission**: allows access to files within the directory (subject to the permissions on the files themselves).
+
+### File I/O Model
+
+> Remember: UNIX systems **have no** *end-of-file* character; the end of a file is detected by a *read* that returns **no data**.
+
+#### File descriptors
+
+The I/O system calls refer to *open* files using a **file descriptor**, a (usually small) non-negative integer.
+
+> A file descriptor is typically obtained by a call to open() (could be other syscall like socket(2) as well, which is based on open)
+
+Normally, a process inherits three open file descriptors when it is started by
+the shell:
+
+- 0 which indicates **standard input**
+- 1 which indicates **standard output**
+- 2 which indicates **standard error**
+
+***CAUTION***: These three FDs are intentionally stay open in child process, normally it's better that a child process **does not** inherit parent's FDs. (which is possible with **O_CLOEXEC** flag)
+
+### Process
+
+A process is an instance of an executing program.
+
+States of a program:
+
+1. When a program is executed, the kernel loads the code of the program into *virtual memory*,
+2. Then Kernel allocates space for program variables.
+
+3. And sets up kernel bookkeeping data structures to record various information about process
+    > For instance: PID, termination status, UIDs, and GIDs
+
+From a kernel point of view, processes are the entities among which the kernel must share the various resources of the computer.
+
+For resources that are *limited*, such as memory:
+
+ 1. The kernel initially allocates some amount of the resource to the process
+
+ 2. And adjusts this allocation over the lifetime of the process in response to the demands of the process and the overall system demand for that resource.
