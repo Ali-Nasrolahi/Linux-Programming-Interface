@@ -14,7 +14,6 @@
       - [SUSv3 and POSIX.1-2001](#susv3-and-posix1-2001)
       - [SUSv3](#susv3)
       - [SUSv4 and POSIX.1-2008](#susv4-and-posix1-2008)
-  - [END](#end)
 
 ## A Brief History of UNIX and C
 
@@ -49,7 +48,7 @@
 
 - In *1984*, **Richard Stallman** set to work on creating a **"free"** UNIX implementation
 
-> **Extreme Respect** to one of the most influential individual, I know.
+  - > **Extreme Respect** to one of the most influential individual, I know.
 
 ### Linux
 
@@ -65,7 +64,8 @@
 
 ### The First POSIX Standards
 
-- POSIX: Portable Operating System Interface
+POSIX: Portable Operating System Interface
+
 - refers to a group of standards developed under the auspices of *IEEE*
 
 ### SUSVx
@@ -96,4 +96,4 @@ The SUSv3 base specifications divided into the following four parts:
 
 - In *2008*, the Austin group completed a revision of the combined POSIX.1 and Single UNIX Specification.
 
-## END
+---

@@ -1,12 +1,41 @@
 # Notes from ***FUNDAMENTAL CONCEPTS***
 
+- [Notes from ***FUNDAMENTAL CONCEPTS***](#notes-from-fundamental-concepts)
+  - [The Core Operating System: The Kernel](#the-core-operating-system-the-kernel)
+  - [Kernel mode and user mode](#kernel-mode-and-user-mode)
+    - [Process vs kernel views of the system](#process-vs-kernel-views-of-the-system)
+  - [The Shell](#the-shell)
+  - [Users and Groups](#users-and-groups)
+    - [Users](#users)
+    - [Groups](#groups)
+    - [Superuser](#superuser)
+  - [Single Directory Hierarchy, Directories, Links, and Files](#single-directory-hierarchy-directories-links-and-files)
+    - [File types](#file-types)
+    - [Directories and links](#directories-and-links)
+    - [Symbolic links](#symbolic-links)
+    - [Filenames](#filenames)
+    - [Pathnames](#pathnames)
+    - [File ownership and permissions](#file-ownership-and-permissions)
+  - [File I/O Model](#file-io-model)
+    - [File descriptors](#file-descriptors)
+  - [Process](#process)
+    - [Process memory layout](#process-memory-layout)
+    - [Process creation and program execution](#process-creation-and-program-execution)
+    - [Process termination and termination status](#process-termination-and-termination-status)
+    - [Process user and group identifiers (credentials)](#process-user-and-group-identifiers-credentials)
+    - [Privileged processes](#privileged-processes)
+    - [The init process](#the-init-process)
+    - [Daemon processes](#daemon-processes)
+    - [Resource limits](#resource-limits)
+  - [Memory Mappings](#memory-mappings)
+
 ## The Core Operating System: The Kernel
 
 > The Kernel (in this context): refers to the **central** software that **manages** and **allocates** computer resources (i.e., the CPU, RAM, and devices).
 
 > The Linux kernel executable typically resides at the pathname **/boot/vmlinuz** , or something similar.
 
-### Kernel mode and user mode
+## Kernel mode and user mode
 
 When running in user mode, the CPU can access only memory that is marked as being in user space; attempts to *access memory* in *kernel space* result in a hardware **exception**.
 
@@ -15,7 +44,7 @@ kernel mode.
 
 > (for instance: executing the halt instruction to stop the system, accessing the memory-management hardware, and initiating device I/O operations.)
 
-### Process versus kernel views of the system
+### Process vs kernel views of the system
 
 - The kernel facilitates the running of *all* processes on the system.
 - The kernel decides which *process* will next obtain access to the *CPU*, when it will do so, and for *how long*.
@@ -32,7 +61,9 @@ kernel mode.
 
 - Lastly, the kernel (in particular, device drivers) performs **all direct communication** with *input* and *output* devices, transferring information to and from user processes as required
 
-### The Shell
+---
+
+## The Shell
 
  A shell is a special-purpose program designed to *read* commands typed by a user and *execute* appropriate programs in response to those commands. (aka. *command interpreter*)
 
@@ -50,9 +81,11 @@ Berkeley.
 - *Bourne again shell (bash)*: This shell is the **GNU** project’s reimplementation of
 the *Bourne shell*. The principal authors of bash are **Brian Fox** and **Chet Ramey**. Bash is probably **the most** widely used shell on Linux.
 
-### Users and Groups
+---
 
-#### Users
+## Users and Groups
+
+### Users
 
  Every user of the system has a **unique** login name (**username**) and a corresponding numeric **user ID** (UID).
 
@@ -67,7 +100,7 @@ the *Bourne shell*. The principal authors of bash are **Brian Fox** and **Chet R
 
 For security reasons, the password is often stored in the separate **shadow password file**, which is readable only by privileged users.
 
-#### Groups
+### Groups
 
 For administrative purposes—in particular, for controlling access to files and other system resources—it is useful to organize users into groups.
 
@@ -77,28 +110,30 @@ The system group file, **/etc/group** , which includes the following information
 - *Group ID (GID)*: the numeric ID associated with this group.
 - *User list*: a comma-separated list of **login names** of *users* who are members of this group (and who are not otherwise identified as members of the group by virtue of the group ID field of their password file record).
 
-#### Superuser
+### Superuser
 
 - The superuser account has **UID 0**, and normally has the login name **root**.
 
-### Single Directory Hierarchy, Directories, Links, and Files
+---
+
+## Single Directory Hierarchy, Directories, Links, and Files
 
 The kernel maintains a single hierarchical directory structure to organize all files in the system.  
 
 At the base of this hierarchy is the *root* directory, named **/** (slash). All files and directories are children or further removed descendants of the root directory.
 
-#### File types
+### File types
 
 Within the file system, each file is marked with a *type*, indicating what kind of file it is.
 These other file types other than *regular* or *plain* files; includes devices, pipes, sockets, directories, and symbolic links.
 
-#### Directories and links
+### Directories and links
 
 A **directory** is a special file whose contents take the form of a table of filenames coupled with references to the corresponding files.
 
 This filename-plus-reference association is called a **link**.
 
-#### Symbolic links
+### Symbolic links
 
 Like a normal link, a **symbolic link** provides an alternative name for a file.
 
@@ -108,7 +143,7 @@ But whereas a *normal link* is ai *filename-plus-pointer* entry in a directory l
 
 > Often **hard link** and **soft link** are used as alternative terms for normal and symbolic links.
 
-#### Filenames
+### Filenames
 
 - On most Linux file systems, filenames can be up to *255* characters(Bytes) long.
 
@@ -116,19 +151,19 @@ But whereas a *normal link* is ai *filename-plus-pointer* entry in a directory l
 
 - We should also avoid filenames beginning with a hyphen ( - ), since such filenames may be mistaken for options when specified in a shell command.
 
-#### Pathnames
+### Pathnames
 
 - An absolute pathname begins with a slash ( / ) and specifies the location of a file with respect to the root directory.
 
 > Such as: /home/user/Wassup.txt
 
-- A relative pathname specifies the location of a file relative to a process’s current working directory (see below), and is distinguished from an absolute pathname by the absence of an initial slash.
+- A relative pathname specifies the location of a file relative to a process’s current working directory, and is distinguished from an absolute pathname by the absence of an initial slash.
 
 > Such as: ../root/RemoveMePls.dump
 
 BTW: Don't forget that pathnames must stay in 4096 bytes limit. (this *includes* filenames)
 
-#### File ownership and permissions
+### File ownership and permissions
 
  Each file has an associated user ID and group ID that define the owner of the file and the group to which it belongs.
 
@@ -156,11 +191,13 @@ Meaning of these are slightly different for directories
 
 - **Execute permission**: allows access to files within the directory (subject to the permissions on the files themselves).
 
-### File I/O Model
+---
+
+## File I/O Model
 
 > Remember: UNIX systems **have no** *end-of-file* character; the end of a file is detected by a *read* that returns **no data**.
 
-#### File descriptors
+### File descriptors
 
 The I/O system calls refer to *open* files using a **file descriptor**, a (usually small) non-negative integer.
 
@@ -175,7 +212,9 @@ the shell:
 
 ***CAUTION***: These three FDs are intentionally stay open in child process, normally it's better that a child process **does not** inherit parent's FDs. (which is possible with **O_CLOEXEC** flag)
 
-### Process
+---
+
+## Process
 
 A process is an instance of an executing program.
 
@@ -187,10 +226,105 @@ States of a program:
 3. And sets up kernel bookkeeping data structures to record various information about process
     > For instance: PID, termination status, UIDs, and GIDs
 
-From a kernel point of view, processes are the entities among which the kernel must share the various resources of the computer.
+From a kernel point of view, processes are the entities among which the kernel must share the various resources of the computer.:
 
 For resources that are *limited*, such as memory:
 
  1. The kernel initially allocates some amount of the resource to the process
 
  2. And adjusts this allocation over the lifetime of the process in response to the demands of the process and the overall system demand for that resource.
+
+### Process memory layout
+
+*segments*: are parts of each process which logically divided to. Divisions are as follows:
+
+- **Text**: the instructions of the program.
+- **Data**: the static variables used by the program.
+- **Heap**: an area from which programs can dynamically allocate extra memory.
+- **Stack**: a piece of memory that grows and shrinks as functions are called and return.
+
+### Process creation and program execution
+
+> A parent process can create a child process using *fork(2)*; the kernel creates the child process by making a duplicate of the parent.
+
+> And the child inherits copies of the parent’s *data*, *stack*, and *heap* segments, which it may then modify **independently** of the parent’s copies.
+
+**NOTE:** The program text segment, which is placed in memory marked as **read-only**, is **shared** by the two processes.
+
+### Process termination and termination status
+
+A process can terminate in one of two ways:
+
+1. By *requesting* its own **termination** using the _exit() system call (or the related exit() library function)
+
+2. Or by being killed by the delivery of a **signal**.
+
+**Remember:** System calls and C library functions are 2 different things.
+> _exit() the syscall and exit() in C lib ----->> **NOT SAME**.
+
+> Usually C libs' functions ,that works like a syscall, are only wrappers which call actual syscall.
+
+*termination status*: is a small nonnegative integer value which will be examined by parent process using wait() syscall.
+
+> termination status by _exit(): the process explicitly specifies its own termination status
+
+> termination status by a signal: status sets according to type of signal which caused termination.
+
+### Process user and group identifiers (credentials)
+
+Each process has a number of associated UIDs and GIDs.
+
+Which includes:
+
+- *Real* UID and *real* GID: These identify the user and group to which the process belongs.
+  - > A new process inherits these IDs from its parent.
+  - > A login shell gets its real user ID and real group ID from the corresponding fields in the system password file.
+
+- *Effective* UID and *effective* GID: These two IDs (in conjunction with supplementary GIDs) are used in determining the permissions that the process has when accessing protected resources.
+  - > Typically, the process’s effective IDs have the same values as the corresponding real IDs.
+  - > Changing the effective IDs is a mechanism that allows a process to assume the privileges of another user or group.
+
+- *Supplementary* GIDs: These IDs identify additional groups to which a process belongs.
+  - > A new process inherits its supplementary group IDs from its parent.
+  - > A login shell gets its supplementary group IDs from the system group file.
+
+### Privileged processes
+
+Traditionally, on UNIX systems, a privileged process is one whose *effective* UID is 0 (superuser).
+
+Another way a process may become privileged is via the set-user-ID mechanism.
+
+- > which allows a process to assume an effective user ID that is the same as the user ID of the program file that it is executing.
+
+### The init process
+
+When booting the system, the kernel creates a special process called init, the “**parent of all processes**”.
+
+init features are as follows:
+
+- init process derived from */sbin/init*
+- All processes on the system are created either by *init* or by one of *its descendants*.
+- The init process always has the PID 1 and runs with superuser privileges.
+
+- The init process **can’t be killed** (not even by the superuser), and it terminates *only* when the system is *shut down*.
+
+- The main task of init is to **create** and **monitor** a range of processes required by a running system.
+
+### Daemon processes
+
+A daemon process has these attributes:
+
+1. It is long-lived: A daemon process is often started at **system boot** and *remains* in existence until the system is *shut down*.
+
+2. It runs in the background, and has **no controlling terminal** from which it can read input or to which it can write output.
+
+### Resource limits
+
+Using the *setrlimit()* system call, a process can establish upper limits on its consumption of various resources
+
+- Soft Limit: limits the amount of the resource that the process may consume.
+- Hard Limit: is a ceiling on the value to which the soft limit may be adjusted.
+
+---
+
+## Memory Mappings
