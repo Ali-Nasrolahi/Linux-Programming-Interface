@@ -201,7 +201,7 @@ Meaning of these are slightly different for directories
 
 The I/O system calls refer to *open* files using a **file descriptor**, a (usually small) non-negative integer.
 
-> A file descriptor is typically obtained by a call to open() (could be other syscall like socket(2) as well, which is based on open)
+> A file descriptor is typically obtained by a call to `open()` (could be other syscall like `socket(2)` as well, which is based on open)
 
 Normally, a process inherits three open file descriptors when it is started by
 the shell:
@@ -245,7 +245,7 @@ For resources that are *limited*, such as memory:
 
 ### Process creation and program execution
 
-> A parent process can create a child process using *fork(2)*; the kernel creates the child process by making a duplicate of the parent.
+> A parent process can create a child process using `fork(2)`; the kernel creates the child process by making a duplicate of the parent.
 
 > And the child inherits copies of the parent’s *data*, *stack*, and *heap* segments, which it may then modify **independently** of the parent’s copies.
 
@@ -255,18 +255,18 @@ For resources that are *limited*, such as memory:
 
 A process can terminate in one of two ways:
 
-1. By *requesting* its own **termination** using the _exit() system call (or the related exit() library function)
+1. By *requesting* its own **termination** using the `_exit()` system call (or the related `exit()` library function)
 
 2. Or by being killed by the delivery of a **signal**.
 
 **Remember:** System calls and C library functions are 2 different things.
-> _exit() the syscall and exit() in C lib ----->> **NOT SAME**.
+> `_exit()` the syscall and `exit()` in C lib ----->> **NOT SAME**.
 
 > Usually C libs' functions ,that works like a syscall, are only wrappers which call actual syscall.
 
-*termination status*: is a small nonnegative integer value which will be examined by parent process using wait() syscall.
+*termination status*: is a small nonnegative integer value which will be examined by parent process using `wait()` syscall.
 
-> termination status by _exit(): the process explicitly specifies its own termination status
+> termination status by `_exit()`: the process explicitly specifies its own termination status
 
 > termination status by a signal: status sets according to type of signal which caused termination.
 
@@ -320,11 +320,12 @@ A daemon process has these attributes:
 
 ### Resource limits
 
-Using the *setrlimit()* system call, a process can establish upper limits on its consumption of various resources
+Using the `setrlimit()` system call, a process can establish upper limits on its consumption of various resources
 
 - Soft Limit: limits the amount of the resource that the process may consume.
 - Hard Limit: is a ceiling on the value to which the soft limit may be adjusted.
 
 ---
-
+      
 ## Memory Mappings
+
