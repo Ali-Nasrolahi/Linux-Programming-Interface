@@ -28,6 +28,13 @@
     - [Daemon processes](#daemon-processes)
     - [Resource limits](#resource-limits)
   - [Memory Mappings](#memory-mappings)
+    - [Application of memory mapping](#application-of-memory-mapping)
+  - [Static and Shared Libraries](#static-and-shared-libraries)
+    - [Static library](#static-library)
+      - [Cons of using Static Libraries](#cons-of-using-static-libraries)
+    - [Shared libraries](#shared-libraries)
+      - [Pros of shared libraries](#pros-of-shared-libraries)
+  - [Interprocess Communication and Synchronization](#interprocess-communication-and-synchronization)
 
 ## The Core Operating System: The Kernel
 
@@ -326,6 +333,92 @@ Using the `setrlimit()` system call, a process can establish upper limits on its
 - Hard Limit: is a ceiling on the value to which the soft limit may be adjusted.
 
 ---
-      
+
 ## Memory Mappings
 
+The `mmap()` system call creates a new *memory mapping* in the calling process’s virtual address space.
+
+Mappings devides into:
+
+1. **File mapping**: maps a region of a file into the calling process’s virtual memory.  
+
+  > Once mapped, the file’s contents can be accessed by operations on the bytes in the corresponding memory region.  
+  > The pages of the mapping are automatically loaded from the file as required.
+
+2. **Anonymous mapping**: doesn’t have a corresponding file. Instead, the pages of the mapping are initialized to 0.
+
+The memory in one process’s mapping may be shared with mappings in other processes.
+
+In two ways:
+
+1. 2 processes map same region of a file.
+
+2. A child process created by `fork()` inherits a mapping from its parent.
+
+When multiple processes share the same pages, each process may see the changes made by *other* processes dependi*ng on whether the mapping is created as **private** or **shared**.
+
+### Application of memory mapping
+
+Some of memory mapping are as follows:
+
+- Initialization of a *process’s* **text segment** from the corresponding segment of an *executable* file.
+- Allocation of new (zero-filled) memory.
+- File I/O (memory-mapped I/O).
+- IPC (interprocess communication) via a shared mapping.
+
+---
+
+## Static and Shared Libraries
+
+**Object library**: is a file containing the compiled object code for a set of functions that may be called from application programs.
+
+Modern UNIX systems provide two types of object libraries: *static* and *shared* libraries.
+
+### Static library
+
+A static library is essentially a structured bundle of compiled object modules.
+
+> Note: static lib (aka. *archives*) were the only type of library on early UNIX systems.
+
+To use functions from a static library, we specify that library in the *link* command used to build a program. (must be added for linker)
+
+**Question**: How does linker deal with static libs?
+
+After resolving the various function references from the main program to the modules in the static library, the linker extracts *copies* of the required object modules from the library and *copies these into* the resulting **executable file** (such program called ***staticlly linked***)
+
+> **Note**: Objects will be added to executable file.
+
+#### Cons of using Static Libraries
+
+The fact that each statically linked program includes its **own copy** of the object modules required from the library creates a number of disadvantage.
+
+1. **Duplication** of object code in different executable files wastes disk space.
+
+  > A corresponding waste of memory occurs when statically linked programs using the same library function are executed at the same time; each program requires its own copy of the function to reside in memory.
+
+2. In case of library **modification**, requirement of *recompiling* and *relinking* all programs, is unwise and costly.
+
+### Shared libraries
+
+> Shared libraries were designed to address the problems with static libraries.
+
+**Question**: How does linker deals with shared libs?
+
+Instead of copying object modules from the library into the executable,the linker just *writes* a record into the executable to indicate that at *run time* the executable needs to use that *shared library*. 
+
+When the executable is loaded into memory at run time, a program called the **dynamic linker** ensures that the shared libraries required by the executable are found and loaded into memory.  
+And performs **run-time** linking to resolve the function calls in the executable to the corresponding definitions in the shared libraries.
+
+#### Pros of shared libraries
+
+1. At run time, only **a single** copy of the code of the shared library needs to be resident in memory.
+
+2. All **running programs** can use that copy.
+
+3. The fact that a shared library contains the sole compiled version of a function *saves* disk space.
+
+4. It also greatly eases the job of ensuring that programs employ the **newest version** of a function.
+
+5. Simply *rebuilding* the shared library with the new function definition causes existing programs to **automatically** use the **new definition** when they are *next* executed.
+
+## Interprocess Communication and Synchronization
