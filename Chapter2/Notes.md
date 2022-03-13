@@ -603,7 +603,7 @@ A *client-server* application is one that is broken into two component processes
 
 - *Operation in a heterogeneous environment*: In a network, the various clients, and the server, can be running on different hardware and operating system platforms.
 
---- 
+---
 
 ## Realtime
 
@@ -615,7 +615,7 @@ Although many realtime applications require *rapid* responses to input, the defi
 
 > These include asynchronous I/O, shared memory, memory-mapped files, memory locking, realtime clocks and timers, alternative scheduling policies, realtime signals, message queues, and semaphores.
 
---- 
+---
 
 ## The `/proc` File System
 
@@ -624,5 +624,5 @@ Although many realtime applications require *rapid* responses to input, the defi
 In addition, a set of directories with names of the form `/proc/PID` allows us to view information about **each process** *running* on the system.
 
 ---
-## END
 
+## END
