@@ -278,9 +278,7 @@ A process can terminate in one of two ways:
 
 2. Or by being killed by the delivery of a **signal**.
 
-**Remember:** System calls and C library functions are 2 different things.
-> `_exit()` the syscall and `exit()` in C lib ----->> **NOT SAME**.  
-> Usually C libs' functions ,that works like a syscall, are only wrappers which call actual syscall.
+**Remember:** System calls and library functions are different.
 
 *termination status*: is a small nonnegative integer value which will be examined by parent process using `wait()` syscall.
 
