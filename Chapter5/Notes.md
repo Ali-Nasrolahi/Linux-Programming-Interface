@@ -19,6 +19,12 @@
   - [Truncating a File: `truncate()`and `ftruncate()`](#truncating-a-file-truncateand-ftruncate)
   - [Nonblocking I/O](#nonblocking-io)
   - [I/O on Large Files](#io-on-large-files)
+    - [The transitional LFS API](#the-transitional-lfs-api)
+    - [The `_FILE_OFFSET_BITS` macro](#the-_file_offset_bits-macro)
+    - [Passing `off_t` values to `printf()`](#passing-off_t-values-to-printf)
+  - [The `/dev/fd` Directory](#the-devfd-directory)
+  - [Creating Temporary Files](#creating-temporary-files)
+  - [END](#end)
 
 ## Atomicity and Race Conditions
 
@@ -148,7 +154,7 @@ Using `pread()`or `pwrite()`, multiple threads can **simultaneously** perform I/
 
 ---
 
-## Scatter-Gather I/O: `readv()` and `writev()` 
+## Scatter-Gather I/O: `readv()` and `writev()`
 
 The `readv()` and `writev()` system calls perform **scatter-gather** I/O.
 
@@ -194,13 +200,13 @@ The first of these options, while semantically equivalent to using`writev()`, le
 
 The second option is *not* semantically equivalent to a single call to `writev(),` since the `write()` calls are *not* performed **atomically**.
 
-> Furthermore, performing a **single** `writev()` system call is **cheaper** than performing **multiple** `write()` calls 
+> Furthermore, performing a **single** `writev()` system call is **cheaper** than performing **multiple** `write()` calls
 
 ### Performing scatter-gather I/O at a specified offset
 
 Linux 2.6.30 adds two new system calls that combine scatter-gather I/O functionality with the ability to perform the I/O at a specified offset:
 
-`preadv()` and`pwritev()`. 
+`preadv()` and`pwritev()`.
 
 > These system calls are nonstandard, but are also available on the modern BSDs.
 
@@ -222,7 +228,6 @@ With `truncate(),` the file, which must be **accessible** and **writable**, is s
 The `ftruncate()` system call takes a *descriptor* for a file that has been opened for writing.
 
 > It doesn’t change the file offset for the file.  
-
 > The `truncate()` system call is unique in being the **only** system call that can change the **contents** of a file without first obtaining a descriptor for the file via `open()`.
 
 ---
@@ -239,3 +244,65 @@ Specifying the `O_NONBLOCK` flag when opening a file serves two purposes:
 ---
 
 ## I/O on Large Files
+
+We can write applications requiring **LFS** (*Large File Summit*) functionality in one of two ways:
+
+- Use an alternative API that supports large files.
+    > This API was designed by the LFS as a “transitional extension” to the Single UNIX Specification. Thus, this API is not required to be present on systems conforming to SUSv2 or SUSv3, but many conforming systems do provide it.  
+    > This approach is now **obsolete**.
+- Define the `_FILE_OFFSET_BITS` macro with the value **64** when compiling our programs.
+  > This is the preferred approach, because it allows conforming applications to obtain LFS functionality without making any source code changes.
+
+### The transitional LFS API
+
+To use the transitional LFS API, we must define the `_LARGEFILE64_SOURCE` feature test macro.
+
+This API provides functions capable of handling 64-bit **file sizes** and **offsets**.
+
+> These functions have the same names as their 32-bit counterparts, but have the suffix 64 appended to the function name.  
+> Among these functions are `fopen64()`, `open64()`, `lseek64()`, `truncate64()`, `stat64()`, `mmap64()`, and `setrlimit64()`.
+
+In addition to the aforementioned functions, the transitional LFS API adds some new data types, including:
+
+- **struct stat64**: an analog of the `stat` structure allowing for large file sizes.
+
+- **off64_t:** a 64-bit type for representing file offsets.
+
+### The `_FILE_OFFSET_BITS` macro
+
+The recommended method of obtaining LFS functionality is to define the macro `_FILE_OFFSET_BITS` with the value `64` when compiling a program.
+
+This automatically converts all of the relevant 32-bit functions and data types into their 64-bit counterparts.
+
+### Passing `off_t` values to `printf()`
+
+One problem that the LFS extensions don’t solve for us is how to pass `off_t` values to `printf()` calls.
+
+> In n Section 3.6.2, we noted that the portable method of displaying values of one of the predefined system data types (e.g., **pid_t** or **uid_t**) was to cast that value to `long`, and use the `%ld` `printf()` specifier.
+
+However, if we are employing the LFS extensions, then this is often not sufficient for the `off_t` data type.
+
+Therefore, to display a value of type `off_t`, we cast it to long long and use the `%lld` `printf()` specifier.
+
+---
+
+## The `/dev/fd` Directory
+
+For each **process**, the kernel provides the special virtual directory `/dev/fd`.
+This directory contains filenames of the form `/dev/fd/n`, where `n` is a number corresponding to one of the *open file descriptors* for the process.
+
+---
+
+## Creating Temporary Files
+
+Some programs need to create temporary files that are used only while the program is running, and these files should be removed when the program terminates.
+
+The `mkstemp()` function generates a **unique** filename based on a `template` supplied by the caller and opens the file, returning a *file descriptor* that can be used with I/O system calls.
+
+Typically, a temporary file is **unlinked** (deleted) soon after it is opened, using the `unlink()` system call.
+
+The `tmpfile()` function creates a uniquely named temporary file that is opened for reading and writing.
+
+---
+
+## END
