@@ -61,7 +61,6 @@ From the kernel’s point of view, a process consists of:
 
 ---
 
-
 ## Process ID and Parent Process ID
 
 Each process has a process ID (**PID**).
@@ -81,7 +80,6 @@ Each process has a parent—the process that created it.
 
 If a child process becomes orphaned because its “*birth*” parent terminates, then the child is adopted by the **init** process, and subsequent calls to `getppid()` in the child return 1.
 
-
 ---
 
 ## Memory Layout of a Process
@@ -99,7 +97,6 @@ The memory allocated to each process is composed of a number of parts, usually r
 `size(1)`: displays the size of the text, initialized data, and uninitialized data (*bss*) segments of a binary executable.
 
 ---
-
 
 ## Virtual Memory Management
 
@@ -131,7 +128,6 @@ If a process tries to access an address for which there is **no** corresponding 
 
 ---
 
-
 ## The Stack and Stack Frames
 
 The `stack` grows and shrinks *linearly* as functions are called and return.
@@ -144,7 +140,6 @@ Each (user) stack frame contains the following information:
 variables also automatically disappear when the function returns.
 - **Call linkage information**: Each function uses certain CPU registers counter, Each time one function calls another, a *copy* of these registers is saved in the called function’s *stack frame*.
   > so that when the function returns, the appropriate register values can be restored for the calling function.
-
 
 ---
 
@@ -167,7 +162,6 @@ To portably make the command-line arguments available in other functions, we mus
   > can be obtained from `<errno.h>` by defining the macro `_GNU_SOURCE`.
 
 ---
-
 
 ## Environment List
 
