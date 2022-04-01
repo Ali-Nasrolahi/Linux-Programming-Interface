@@ -8,6 +8,10 @@
     - [Implementation of `malloc()` and `free()`](#implementation-of-malloc-and-free)
       - [`malloc()` implementation](#malloc-implementation)
       - [`free()` implementation](#free-implementation)
+      - [Tools and libraries for `malloc` debugging](#tools-and-libraries-for-malloc-debugging)
+    - [Other Methods of Allocating Memory on the Heap](#other-methods-of-allocating-memory-on-the-heap)
+      - [Allocating aligned memory: `memalign()` and`posix_memalign()`](#allocating-aligned-memory-memalign-andposix_memalign)
+  - [Allocating Memory on the Stack: `alloca()`](#allocating-memory-on-the-stack-alloca)
 
 ## Allocating Memory on the Heap
 
@@ -64,14 +68,61 @@ If no block on the free list is large enough
 
 #### `free()` implementation
 
-When `free()` places a block of memory onto the free list,
+When `free()` places a block of memory onto the free list.
+> free list is a doubly linked list
 
 **Q:** How does it know what size that block is?
 
 Basically, each entries in free list contains 3 additional blocks to actual requested memory.
 
 1. Length.
+    > length of the requested block of memory (i.e., 4 btyes)
 2. pointer to previous block.
 3. pointer to next block.
 
 which is set by `malloc()`.
+
+#### Tools and libraries for `malloc` debugging
+
+- The `mtrace()` and `muntrace()` functions allow a program to turn tracing of memory allocation calls *on* and *off*
+    > These functions are used in conjunction with the ``MALLOC_TRACE environment variable, which should be defined to contain the name of a file to which tracing information should be written.
+
+- The `mcheck()` and `mprobe()` functions allow a program to perform consistency checks on blocks of allocated memory.
+    > for example, catching errors such as attempting to write to a location past the end of a block of allocated memory.  
+    Programs that employ these functions must be linked with the `mcheck` library using the `cc –lmcheck` option.
+- The `MALLOC_CHECK_` environment variable serves a similar purpose to `mcheck()` and`mprobe().` By setting this variable to *different* integer values, we can control how a program responds to memory allocation errors.
+  > One notable difference between the two techniques is that using `MALLOC_CHECK_` doesn’t require modification and recompilation of the program.
+
+**NOTE**: Further information about all of the above features can be found in the `glibc` manual.
+
+### Other Methods of Allocating Memory on the Heap
+
+The `calloc()` function allocates memory for an array of identical items.
+
+```c
+void *calloc(size_t numitems , size_t size );
+```
+
+> Unlike `malloc(),` `calloc()` **initializes** the allocated memory to **0**.
+
+The `realloc()` function is used to resize a block of memory previously allocated by one of the functions in the *malloc* package.
+
+```c
+void *realloc(void * ptr , size_t size );
+```
+
+#### Allocating aligned memory: `memalign()` and`posix_memalign()`
+
+The `memalign()` and `posix_memalign()` functions are designed to allocate memory starting at an address aligned at a specified *power-of-two* boundary,
+
+```c
+void *memalign(size_t boundary , size_t size );
+```
+
+```c
+int posix_memalign(void ** memptr , size_t alignment , size_t size );
+```
+
+---
+
+## Allocating Memory on the Stack: `alloca()` 
