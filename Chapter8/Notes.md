@@ -122,3 +122,11 @@ void endspent(void);
 ---
 
 ## Password Encryption and User Authentication
+
+The only way of validating a candidate password is to encrypt it using the same method and see if the encrypted result matches the value stored in `/etc/shadow`.
+
+The encryption algorithm is encapsulated in the `crypt()` function.
+
+```c
+char *crypt(const char * key , const char * salt );
+```
