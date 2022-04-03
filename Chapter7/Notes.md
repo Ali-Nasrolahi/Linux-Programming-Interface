@@ -12,6 +12,8 @@
     - [Other Methods of Allocating Memory on the Heap](#other-methods-of-allocating-memory-on-the-heap)
       - [Allocating aligned memory: `memalign()` and`posix_memalign()`](#allocating-aligned-memory-memalign-andposix_memalign)
   - [Allocating Memory on the Stack: `alloca()`](#allocating-memory-on-the-stack-alloca)
+    - [Advantages of `alloca()` over`malloce()`](#advantages-of-alloca-overmalloce)
+  - [END](#end)
 
 ## Allocating Memory on the Heap
 
@@ -125,4 +127,28 @@ int posix_memalign(void ** memptr , size_t alignment , size_t size );
 
 ---
 
-## Allocating Memory on the Stack: `alloca()` 
+## Allocating Memory on the Stack: `alloca()`
+
+Like the functions in the `malloc` package, `alloca()` allocates memory dynamically.
+However, instead of obtaining memory from the *heap*, `alloca()` obtains memory from the **stack** by increasing the size of the *stack frame*.
+
+```c
+void *alloca(size_t size );
+```
+
+**NOTE**: If the *stack overflows* as a consequence of calling `alloca(),` then program behavior is **unpredictable**.
+> In particular, we don’t get a `NULL` return to inform us of the error.
+
+### Advantages of `alloca()` over`malloce()`
+
+- Allocating blocks of memory is **faster** with `alloca()` than with`malloc()`.
+    > because `alloca()` is implemented by the compiler as **inline** code that **directly** adjusts the *stack pointer*.
+- `alloca()` doesn’t need to maintain a list of *free* blocks.
+- The memory that `alloca()` allocates is **automatically** freed when the *stack frame* is removed;
+    > that is, when the function that called `alloca()` returns.
+
+Using `alloca()` can be especially useful if we employ `longjmp()` or `siglongjmp()` to perform a **nonlocal** *goto* from a signal handler.
+
+---
+
+## END
