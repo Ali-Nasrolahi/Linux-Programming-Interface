@@ -10,6 +10,7 @@
     - [Scanning all records in the password and group files](#scanning-all-records-in-the-password-and-group-files)
     - [Retrieving records from the shadow password file](#retrieving-records-from-the-shadow-password-file)
   - [Password Encryption and User Authentication](#password-encryption-and-user-authentication)
+  - [END](#end)
 
 ## The Password File: `/etc/passwd`
 
@@ -130,3 +131,7 @@ The encryption algorithm is encapsulated in the `crypt()` function.
 ```c
 char *crypt(const char * key , const char * salt );
 ```
+
+---
+
+## END
