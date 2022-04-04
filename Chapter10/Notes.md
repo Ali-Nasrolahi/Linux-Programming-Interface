@@ -9,6 +9,8 @@
       - [Converting from broken-down time to printable form](#converting-from-broken-down-time-to-printable-form)
       - [Converting from printable form to broken-down time](#converting-from-printable-form-to-broken-down-time)
   - [Timezones](#timezones)
+    - [Timezone definitions](#timezone-definitions)
+    - [Specifying the timezone for a program](#specifying-the-timezone-for-a-program)
 
 **Real time**: This is the time as measured either from some *standard point* (calendar time) or from some *fixed point* (typically the start) in the life of a *process* (elapsed or wall clock time).
 
@@ -92,3 +94,12 @@ char *strptime(const char * str , const char * format , struct tm * timeptr );
 ---
 
 ## Timezones
+
+### Timezone definitions
+
+The system maintains timezone information in files in standard formats.  
+These files reside in the directory `/usr/share/zoneinfo`.
+
+The local time for the system is defined by the timezone file `/etc/localtime`, which is often **linked** to one of the files in `/usr/share/zoneinfo`.
+
+### Specifying the timezone for a program
