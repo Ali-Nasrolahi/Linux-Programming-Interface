@@ -12,6 +12,9 @@
   - [Thread IDs](#thread-ids)
   - [Joining with a Terminated Thread](#joining-with-a-terminated-thread)
   - [Detaching a Thread](#detaching-a-thread)
+  - [Thread Attributes](#thread-attributes)
+  - [Threads Versus Processes](#threads-versus-processes)
+  - [END](#end)
 
 ## Overview
 
@@ -142,5 +145,42 @@ Sometimes, we don’t care about the thread’s *return status*; we simply want 
 In this case, we can mark the thread as **detached**, by making a call to `pthread_detach()` specifying the thread’s identifier in *thread*.
 
 ```c
-int pthread_detach(pthread_t thread );
+int pthread_detach(pthread_t thread);
 ```
+
+---
+
+## Thread Attributes
+
+These attributes include information such as the location and size of the thread’s stack, the thread’s scheduling policy and priority
+
+---
+
+## Threads Versus Processes
+
+*Advantages* of a multithreaded approach:
+
+- **Sharing** data between threads is easy. By contrast, sharing data between processes requires more work
+
+- *Thread creation* is **faster** than process creation; context-switch time may be lower for threads than for processes.
+
+*Disadvantages* of a multithreaded approach:
+
+- When programming with threads, we need to ensure that the functions we call are **thread-safe**
+
+- A bug in one thread can **damage all** of the threads in the process, since they share the same address space and other attributes.
+
+- Each thread is competing for use of the *finite* virtual address space of the host process. In particular, each thread’s *stack* and *thread-specific data* consumes a part of the process virtual address space, which is consequently **unavailable** for other threads.
+
+The following are some other points that may influence our choice of threads versus processes:
+
+- Dealing with **signals** in a multithreaded application requires careful design.
+
+- In a multithreaded application, all threads must be running the **same** program.In a multiprocess application, different processes can run **different** programs.
+
+- Aside from data, threads also share certain other information. This may be an advantage or a disadvantage, depending on the application.
+    > e.g., file descriptors, signal dispositions, current working directory, and user and group IDs.
+
+---
+
+## END
