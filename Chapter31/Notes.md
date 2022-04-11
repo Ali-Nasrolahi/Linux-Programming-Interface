@@ -9,6 +9,7 @@
     - [Overview of the Thread-Specific Data API](#overview-of-the-thread-specific-data-api)
     - [Details of the Thread-Specific Data API](#details-of-the-thread-specific-data-api)
   - [Thread-Local Storage](#thread-local-storage)
+  - [END](#end)
 
 ## Thread Safety (and Reentrancy Revisited)
 
@@ -74,3 +75,7 @@ To create a thread-local variable, we simply include the `__thread` specifier in
 ```c
 static __thread buf[MAX_ERROR_LEN];
 ```
+
+---
+
+## END
