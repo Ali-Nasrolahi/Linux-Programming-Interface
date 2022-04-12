@@ -13,6 +13,10 @@
     - [Terminating a Process Abnormally: `abort()`](#terminating-a-process-abnormally-abort)
   - [Handling a Signal on an Alternate Stack: sigaltstack()](#handling-a-signal-on-an-alternate-stack-sigaltstack)
   - [The `SA_SIGINFO` Flag](#the-sa_siginfo-flag)
+  - [Interruption and Restarting of System Calls](#interruption-and-restarting-of-system-calls)
+    - [System calls (and library functions) for which `SA_RESTART` is effective](#system-calls-and-library-functions-for-which-sa_restart-is-effective)
+    - [Modifying the `SA_RESTART` flag for a signal](#modifying-the-sa_restart-flag-for-a-signal)
+  - [END](#end)
 
 ## Designing Signal Handlers
 
@@ -135,3 +139,46 @@ int sigaltstack(const stack_t * sigstack , stack_t * old_sigstack );
 ----
 
 ## The `SA_SIGINFO` Flag
+
+Setting the `SA_SIGINFO` flag when establishing a handler with `sigaction()` allows the handler to obtain additional information about a signal when it is delivered.
+
+In order to obtain this information, we must declare the handler as follows:
+
+```c
+void handler(int sig, siginfo_t *siginfo, void *ucontext);
+```
+
+`siginfo`: is a structure used to provide the additional information about the signal
+
+`uconetext`: is a pointer to a structure of type `ucontext_t` which provides so-called user-context information describing the process state prior to invocation of the signal handler.
+> including the previous process signal mask and saved register values and etc.
+
+----
+
+## Interruption and Restarting of System Calls
+
+Imagine we were waiting on some syscall such as `read(2)` , what happens if meanwhile some signal just generated?
+
+By default syscall would failed with `EINTR`. Often, however, we would prefer to continue the execution of an interrupted system call.
+
+So we should handle this possibility after syscall failure.
+
+Another option is that, we can specify the `SA_RESTART` flag when establishing the signal handler with `sigaction()`, so that system calls are **automatically** *restarted* by the kernel on the process’s behalf.
+
+### System calls (and library functions) for which `SA_RESTART` is effective
+
+chieck pages 443-444 for full list of these funtions.
+
+### Modifying the `SA_RESTART` flag for a signal
+
+The `siginterrupt()` function changes the `SA_RESTART` setting associated with a signal.
+
+```c
+int siginterrupt(int sig , int flag );
+```
+
+SUSv4 marks `siginterrupt()` **obsolete**, recommending the use of `sigaction()` instead for this purpose.
+
+----
+
+## END
