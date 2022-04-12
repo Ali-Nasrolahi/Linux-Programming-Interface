@@ -1,5 +1,14 @@
 # Notes From ***THREADS: FURTHER DETAILS***
 
+- [Notes From ***THREADS: FURTHER DETAILS***](#notes-from-threads-further-details)
+  - [Thread Stacks](#thread-stacks)
+  - [Threads and Signals](#threads-and-signals)
+    - [How the UNIX Signal Model Maps to Threads](#how-the-unix-signal-model-maps-to-threads)
+    - [Manipulating the Thread Signal Mask](#manipulating-the-thread-signal-mask)
+    - [Sending a Signal to a Thread](#sending-a-signal-to-a-thread)
+    - [Dealing with Asynchronous Signals Sanely](#dealing-with-asynchronous-signals-sanely)
+    - [Threads and Process Control](#threads-and-process-control)
+
 ## Thread Stacks
 
 Each thread has its own stack whose size is **fixed** when the thread is created.
@@ -14,6 +23,9 @@ The related `pthread_attr_setstack()` function can be used to control both the *
 
 ### Manipulating the Thread Signal Mask
 
+Only difference between *process signal mask* and *thread* one is just being **thread-wide** or **process-wide**.
+> check chapters 20-22 for full explaination of signals, including signal masks.
+
 When a new thread is created, it inherits a copy of the signal mask of the thread that created it.
 
 A thread can use `pthread_sigmask()` to change its signal mask, to retrieve the existing mask or both.
@@ -24,7 +36,7 @@ int pthread_sigmask(int how , const sigset_t * set , sigset_t * oldset );
 
 ### Sending a Signal to a Thread
 
-The `pthread_kill()` function sends the signal sig to another thread in the same process.
+The `pthread_kill()` function sends the signal *sig* to another thread in the same process.
 
 ```c
 int pthread_kill(pthread_t thread , int sig );

@@ -15,7 +15,7 @@
   - [Signals Are Not Queued](#signals-are-not-queued)
   - [Changing Signal Dispositions:`sigaction()`](#changing-signal-dispositionssigaction)
   - [Waiting for a Signal: `pause()`](#waiting-for-a-signal-pause)
-    - [END](#end)
+  - [END](#end)
 
 ## Concepts and Overview
 
@@ -255,4 +255,6 @@ Calling `pause()` suspends execution of the process until the call is interrupte
 int pause(void);
 ```
 
-### END
+---
+
+## END

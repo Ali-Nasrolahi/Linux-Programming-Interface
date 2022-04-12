@@ -48,11 +48,18 @@ The purpose of `pthread_testcancel()` is simply to be a cancellation point. If a
 void pthread_testcancel(void);
 ```
 
+---
+
 ## Cleanup Handlers
 
 A thread can establish one or more **cleanup handlers**—functions that are automatically executed if the thread is canceled.
 
 The `pthread_cleanup_push()` and `pthread_cleanup_pop()` functions respectively add and remove handlers on the calling thread’s stack of cleanup handlers.
+
+```c
+void pthread_cleanup_push(void (* routine )(void*), void * arg );
+void pthread_cleanup_pop(int execute );
+```
 
 ---
 

@@ -11,7 +11,7 @@
   - [Other Methods of Terminating a Signal Handler](#other-methods-of-terminating-a-signal-handler)
     - [Performing a Nonlocal Goto from a Signal Handler](#performing-a-nonlocal-goto-from-a-signal-handler)
     - [Terminating a Process Abnormally: `abort()`](#terminating-a-process-abnormally-abort)
-  - [Handling a Signal on an Alternate Stack: sigaltstack()](#handling-a-signal-on-an-alternate-stack-sigaltstack)
+  - [Handling a Signal on an Alternate Stack: `sigaltstack()`](#handling-a-signal-on-an-alternate-stack-sigaltstack)
   - [The `SA_SIGINFO` Flag](#the-sa_siginfo-flag)
   - [Interruption and Restarting of System Calls](#interruption-and-restarting-of-system-calls)
     - [System calls (and library functions) for which `SA_RESTART` is effective](#system-calls-and-library-functions-for-which-sa_restart-is-effective)
@@ -118,7 +118,7 @@ void abort(void);
 
 ----
 
-## Handling a Signal on an Alternate Stack: sigaltstack()
+## Handling a Signal on an Alternate Stack: `sigaltstack()`
 
 Normally, when a signal handler is invoked, the kernel creates a frame for it on the **process stack**. However, this *may not be possible* if a process attempts to extend the stack beyond the maximum possible size.
 

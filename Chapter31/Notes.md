@@ -35,7 +35,7 @@ int pthread_once(pthread_once_t * once_control , void (* init )(void));
 
 ## Thread-Specific Data
 
-**NOTE**: This section contains some advanced subjects which I could not fully absorb, Therefore I'd be back later and complete it.
+**NOTE**: This section contains some advanced subjects which I could not fully absorb, therefore I'd be back later and complete it.
 
 The most efficient way of making a function thread-safe is to make it *reentrant*.
 

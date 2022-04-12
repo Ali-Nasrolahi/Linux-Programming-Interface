@@ -36,7 +36,7 @@ Threads address both of these problems:
 - **Sharing** information between threads is easy and fast. It is just a matter of copying data into shared (global or heap) variables.
 
 - Thread creation is **faster** than process creation—typically, ten times faster or better.  
-Thread creation is faster because many of the attributes that must be **duplicated** in a child created by `fork()` are instead **shared** between threads.
+  > Thread creation is faster because many of the attributes that must be **duplicated** in a child created by `fork()` are instead **shared** between threads.
 
 ---
 
@@ -130,9 +130,9 @@ If we fail to do this, then, when the thread terminates, it produces the thread 
 
 The task that `pthread_join()` performs for threads is similar to that performed by `waitpid()` for processes. However, there are some notable differences:
 
-- Threads are peers. Any thread in a process can use pthread_join() to join with any other thread in the process. This differs from the **hierarchical** relationship between processes.
-    > When a parent process creates a child using `fork(),` it is the only process that can `wait()` on that child.
-- There is no way of saying “*join with any thread*”. nor is there a way to do a nonblocking joinThere are ways to achieve similar functionality using **condition variables**.
+- Threads are peers. Any thread in a process can use `pthread_join()` to join with any other thread in the process. This differs from the **hierarchical** relationship between processes.
+    > When a parent process creates a child using `fork()`, it is the only process that can `wait()` on that child.
+- There is no way of saying “*join with any thread*” nor is there a way to do a nonblocking join. There are ways to achieve similar functionality using **condition variables**.
 
 > `waitpid(–1, &status, options)` and `waitpid()` with **WNOHANG** flag.
 
@@ -158,13 +158,13 @@ These attributes include information such as the location and size of the thread
 
 ## Threads Versus Processes
 
-*Advantages* of a multithreaded approach:
+***Advantages*** of a multithreaded approach:
 
-- **Sharing** data between threads is easy. By contrast, sharing data between processes requires more work
+- **Sharing** data between threads is easy. By contrast, sharing data between processes requires more work.
 
 - *Thread creation* is **faster** than process creation; context-switch time may be lower for threads than for processes.
 
-*Disadvantages* of a multithreaded approach:
+***Disadvantages*** of a multithreaded approach:
 
 - When programming with threads, we need to ensure that the functions we call are **thread-safe**
 
@@ -176,7 +176,7 @@ The following are some other points that may influence our choice of threads ver
 
 - Dealing with **signals** in a multithreaded application requires careful design.
 
-- In a multithreaded application, all threads must be running the **same** program.In a multiprocess application, different processes can run **different** programs.
+- In a multithreaded application, all threads must be running the **same** program. In a multiprocess application, different processes can run **different** programs.
 
 - Aside from data, threads also share certain other information. This may be an advantage or a disadvantage, depending on the application.
     > e.g., file descriptors, signal dispositions, current working directory, and user and group IDs.
