@@ -14,6 +14,7 @@
   - [Pending Signals](#pending-signals)
   - [Signals Are Not Queued](#signals-are-not-queued)
   - [Changing Signal Dispositions:`sigaction()`](#changing-signal-dispositionssigaction)
+  - [Waiting for a Signal: `pause()`](#waiting-for-a-signal-pause)
     - [EDN](#edn)
 
 ## Concepts and Overview
@@ -245,5 +246,13 @@ int sigaction(int sig , const struct sigaction * act , struct sigaction * oldact
 ```
 
 ---
+
+## Waiting for a Signal: `pause()`
+
+Calling `pause()` suspends execution of the process until the call is interrupted by a signal handler
+
+```c
+int pause(void);
+```
 
 ### EDN
