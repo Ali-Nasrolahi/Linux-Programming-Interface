@@ -10,6 +10,7 @@
   - [Other Ways of Sending Signals: `raise()` and `killpg()`](#other-ways-of-sending-signals-raise-and-killpg)
   - [Displaying Signal Descriptions](#displaying-signal-descriptions)
   - [Signal Sets](#signal-sets)
+  - [The Signal Mask (Blocking Signal Delivery)](#the-signal-mask-blocking-signal-delivery)
 
 ## Concepts and Overview
 
@@ -49,17 +50,16 @@ A program can set one of the following dispositions for a signal:
 
 A **signal handler** is a function, written by the programmer, that performs appropriate tasks in response to the delivery of a signal.
 
-
 ## Signal Types and Default Actions
 
 check `signal(7)` manual for full list.
 
 ---
 
-## Changing Signal Dispositions: `signal()` 
+## Changing Signal Dispositions: `signal()`
 
-UNIX systems provide two ways of changing the disposition of a signal: `signal()` and `sigaction()`. 
-> use `sigaction()` instead of`signal()`. 
+UNIX systems provide two ways of changing the disposition of a signal: `signal()` and `sigaction()`.
+> use `sigaction()` instead of`signal()`.
 
 ```c
 void ( *signal(int sig , void (* handler )(int)) ) (int);
@@ -73,7 +73,7 @@ A **signal handler** (also called a *signal catcher*) is a function that is call
 
 ---
 
-## Sending Signals: `kill()` 
+## Sending Signals: `kill()`
 
 One process can send a signal to another process using the `kill()` system call.
 
@@ -101,13 +101,13 @@ If the *sig* argument is specified as *0* (the so-called `null signal`), then no
 
 Various other techniques can also be used to check whether a particular process is running, including the following:
 
-- The `wait()` system calls. 
+- The `wait()` system calls.
   > They can be employed only if the monitored process is a child of the caller.
 - **Semaphores** and exclusive **file locks**.
   > if we can acquire the semaphore or lock, we know the process has terminated.
 - *IPC channels* such as **pipes** and **FIFOs**:
   > We set up the monitored process so that it holds a file descriptor open for writing on the channel as long as it is alive.  Meanwhile, the monitoring process holds open a read descriptor for the channel, and it knows that the monitored process has terminated when the write end of the channel is closed.
- - The `/proc/PID` interface:
+- The `/proc/PID` interface:
 
 ---
 
@@ -130,8 +130,8 @@ int killpg(pid_t pgrp , int sig );
 ## Displaying Signal Descriptions
 
 Each signal has an associated printable description. These descriptions are listed in
-the array `sys_siglist`. 
-> e.g., `sys_siglist[SIGPIPE]` to get the description for`SIGPIPE`. 
+the array `sys_siglist`.
+> e.g., `sys_siglist[SIGPIPE]` to get the description for`SIGPIPE`.
 
 However, rather than using the `sys_siglist` array directly, the `strsignal()` function is preferable.
 
@@ -156,3 +156,42 @@ void psignal(int sig ,const char* msg);
 ---
 
 ## Signal Sets
+
+Many signal-related system calls need to be able to represent a group of different signals.
+
+Multiple signals are represented using a data structure called a `signal set`, provided by the system data type `sigset_t`.
+
+The `sigemptyset()` function initializes a signal set to contain **no members**. The `sigfillset()` function initializes a set to contain **all signals** (including all *realtime signals*)
+
+```c
+int sigemptyset(sigset_t * set );
+int sigfillset(sigset_t * set );
+```
+
+After initialization, individual signals can be **added** to a set using `sigaddset()` and **removed** using`sigdelset()`.
+
+```c
+int sigaddset(sigset_t * set , int sig );
+int sigdelset(sigset_t * set , int sig );
+```
+
+The `sigismember()` function is used to **test** for membership of a set.
+
+```c
+int sigismember(const sigset_t * set , int sig );
+```
+
+The GNU C library implements three **nonstandard** functions that perform tasks that are complementary to the standard signal set functions just described.
+
+```c
+int sigandset(sigset_t * set , sigset_t * left , sigset_t * right );
+int sigorset(sigset_t * dest , sigset_t * left , sigset_t * right );
+
+int sigisemptyset(const sigset_t * set );
+```
+
+- `sigandset()` places the **intersection** of the sets *left* and *right* in the set *dest*.
+- `sigorset()` places the **union** of the sets *left* and *right* in the set *dest*.
+- `sigisemptyset()` returns true if *set* contains **no signals**.
+
+## The Signal Mask (Blocking Signal Delivery)
