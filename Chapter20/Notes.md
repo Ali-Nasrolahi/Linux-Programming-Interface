@@ -11,6 +11,10 @@
   - [Displaying Signal Descriptions](#displaying-signal-descriptions)
   - [Signal Sets](#signal-sets)
   - [The Signal Mask (Blocking Signal Delivery)](#the-signal-mask-blocking-signal-delivery)
+  - [Pending Signals](#pending-signals)
+  - [Signals Are Not Queued](#signals-are-not-queued)
+  - [Changing Signal Dispositions:`sigaction()`](#changing-signal-dispositionssigaction)
+    - [EDN](#edn)
 
 ## Concepts and Overview
 
@@ -195,3 +199,51 @@ int sigisemptyset(const sigset_t * set );
 - `sigisemptyset()` returns true if *set* contains **no signals**.
 
 ## The Signal Mask (Blocking Signal Delivery)
+
+For each process, the kernel maintains a **signal mask**—*a set of signals whose delivery to the process is currently blocked*. If a signal that is blocked is sent to a process, delivery of that signal is **delayed** until it is **unblocked** by being **removed** from the process *signal mask*.
+
+A signal may be added to the signal mask in the following ways:
+
+- When a signal handler is invoked, the signal that caused its invocation can be automatically added to the signal mask.
+  > Whether or not this occurs depends on the flags used when the handler is established using `sigaction()`.
+- When a signal handler is established with `sigaction()`, it is possible to specify an additional set of signals that are to be **blocked** when the handler is invoked.
+
+- The `sigprocmask()` system call can be used at any time to **explicitly** add signals to, and remove signals from, the *signal mask*.
+
+```c
+int sigprocmask(int how , const sigset_t * set , sigset_t * oldset );
+```
+
+---
+
+## Pending Signals
+
+If a process receives a signal that it is currently blocking, that signal is added to the process’s set of pending signals.
+
+To determine which signals are pending for a process, we can call`sigpending()`.
+
+```c
+int sigpending(sigset_t * set );
+```
+
+---
+
+## Signals Are Not Queued
+
+The set of pending signals is only a mask; it indicates whether or not a signal has occurred, but not how many times it has occurred.
+
+---
+
+## Changing Signal Dispositions:`sigaction()`
+
+The `sigaction()` system call is an alternative to `signal()` for setting the disposition of a signal.
+
+`sigaction()` allows us to **retrieve** the disposition of a signal *without* **changing** it, and to set various attributes controlling precisely what happens when a *signal handler* is invoked.
+
+```c
+int sigaction(int sig , const struct sigaction * act , struct sigaction * oldact );
+```
+
+---
+
+### EDN
