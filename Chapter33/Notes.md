@@ -25,6 +25,9 @@
     - [NPTL](#nptl)
     - [Which Threading Implementation?](#which-threading-implementation)
       - [Discovering the threading implementation](#discovering-the-threading-implementation)
+      - [Selecting the threading implementation used by a program](#selecting-the-threading-implementation-used-by-a-program)
+  - [Advanced Features of the Pthreads API](#advanced-features-of-the-pthreads-api)
+  - [END](#end)
 
 ## Thread Stacks
 
@@ -217,6 +220,59 @@ We may sometimes need to answer the following questions:
 We can use the following command to discover which threading implementation the system provides, or, if it provides both implementation, then which one is used by default:
 
 ```bash
+#  getconf - Query system configuration variables
+
 $ getconf GNU_LIBPTHREAD_VERSION
 ```
 
+First, the following command can be used to show the pathname of the GNU C library that is used when we run a program.
+
+```c
+$ ldd /bin/ls | grep libc.so
+  libc.so.6 => /lib/tls/libc.so.6 (0x40050000)
+```
+
+If we execute this pathname as a command, then **glibc** displays a range of information about itself. We can `grep` though this information to select the line that displays the threading implementation:
+
+```c
+$ /lib/tls/libc.so.6 | egrep -i 'threads|nptl'
+  Native POSIX Threads Library by Ulrich Drepper et al
+```
+
+#### Selecting the threading implementation used by a program
+
+For use **specific** implementation, can employ a special environment variable understood by the dynamic linker: `LD_ASSUME_KERNEL`.
+
+This environment variable tells the *dynamic linker* to operate as though it is running on top of a particular Linux kernel version.
+
+By specifying a kernel version that doesn’t provide support for NPTL (e.g., 2.2.5 ), we can ensure that LinuxThreads is used.
+
+Thus, we could run a multithreaded program with LinuxThreads using the following command:
+
+```bash
+$ $ LD_ASSUME_KERNEL=2.2.5 ./prog
+
+# or
+
+$ export LD_ASSUME_KERNEL=2.2.5
+```
+
+---
+
+## Advanced Features of the Pthreads API
+
+Some advanced features of the Pthreads API include the following:
+
+- **Realtime scheduling**: We can set realtime scheduling policies and priorities for threads.
+  > This is similar to the process realtime scheduling system calls.
+
+- **Process shared mutexes and condition variables**: SUSv3 specifies an option to allow
+mutexes and condition variables to be *shared* **between processes** (rather than
+just among the threads of a single process).
+  > NPTL supports this feature.
+
+- **Advanced thread-synchronization primitives**: These facilities include barriers, read-write locks, and spin locks.
+
+---
+
+## END
