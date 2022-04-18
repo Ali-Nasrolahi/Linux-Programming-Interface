@@ -15,6 +15,9 @@
     - [When is a signal delivered?](#when-is-a-signal-delivered)
     - [Order of delivery of multiple unblocked signals](#order-of-delivery-of-multiple-unblocked-signals)
   - [Implementation and Portability of `signal()`](#implementation-and-portability-of-signal)
+    - [Some *glibc* details](#some-glibc-details)
+    - [`sigaction()` is the preferred API for establishing a signal handler](#sigaction-is-the-preferred-api-for-establishing-a-signal-handler)
+  - [Realtime Signals](#realtime-signals)
 
 ## Core Dump Files
 
@@ -171,3 +174,28 @@ As currently implemented, the Linux kernel delivers the signals in **ascending**
 ---
 
 ## Implementation and Portability of `signal()`
+
+Early implementations of signals were unreliable, meaning that:
+
+- On entry to a signal handler, the disposition of the signal was reset to its default.
+  > Another call to `signal()` must've been occured to register signal handler.
+- Delivery of further occurrences of a signal was not blocked during execution of a signal handler.
+  > i.e., singal handler could've been invoked recursively, which in numerous signal delivery results in *stack overflow*.
+
+check page *455* for `signal()` implementation with `sigaction()`.
+
+### Some *glibc* details
+
+If we want to obtain unreliable signal semantics with modern versions of glibc, we can explicitly replace our calls to `signal()` with calls to the (nonstandard) `sysv_signal()` function.
+
+```c
+void ( *sysv_signal(int sig , void (* handler )(int)) ) (int);
+```
+
+### `sigaction()` is the preferred API for establishing a signal handler
+
+Because of the System V versus BSD (and old versus recent glibc) portability issues described above, it is good practice always to use `sigaction()`, rather than `signal()`, to establish signal handlers.
+
+---
+
+## Realtime Signals
