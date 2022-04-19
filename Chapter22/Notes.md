@@ -18,6 +18,10 @@
     - [Some *glibc* details](#some-glibc-details)
     - [`sigaction()` is the preferred API for establishing a signal handler](#sigaction-is-the-preferred-api-for-establishing-a-signal-handler)
   - [Realtime Signals](#realtime-signals)
+    - [Limits on the number of queued realtime signals](#limits-on-the-number-of-queued-realtime-signals)
+    - [Using realtime signals](#using-realtime-signals)
+    - [Sending Realtime Signals](#sending-realtime-signals)
+    - [Handling Realtime Signals](#handling-realtime-signals)
 
 ## Core Dump Files
 
@@ -199,3 +203,57 @@ Because of the System V versus BSD (and old versus recent glibc) portability iss
 ---
 
 ## Realtime Signals
+
+Realtime signals were defined in POSIX.1b to remedy a number of limitations of
+standard signals.
+
+Advantages over standard signals:
+
+- Realtime signals provide an **increased range** of signals that can be used for application-defined purposes.
+
+- Realtime signals are **queued**. If multiple instances of a realtime signal are sent to a process, then the signal is delivered multiple times.
+
+- When sending a realtime signal, it is possible to **specify data** that accompanies the signal.
+
+- The order of delivery of different realtime signals is **guaranteed**. If multiple different realtime signals are pending, then the lowest-numbered signal is delivered first.
+
+The <*signal.h*> header file defines the constant `RTSIG_MAX` to indicate the number of available realtime signals, and the constants `SIGRTMIN` and `SIGRTMAX` to indicate the lowest and highest available realtime signal numbers.
+
+### Limits on the number of queued realtime signals
+
+SUSv3 allows an implementation to place an *upper limit* on the number of realtime signals (of all types) that may be queued to a process, and requires that this limit be at least`_POSIX_SIGQUEUE_MAX`
+
+It can also make this information available through the following call:
+
+```c
+lim = sysconf(_SC_SIGQUEUE_MAX);
+```
+
+> On Linux, this call returns –1. The reason for this is that Linux employs a different model for limiting the number of realtime signals that may be queued to a process.
+
+In Linux versions up to and including 2.6.7, this limit can be viewed and (with privilege) changed via the Linux-specific `/proc/sys/kernel/rtsig-max` file.
+
+Starting with Linux 2.6.8, `/proc` interfaces were removed. Under the new model, the `RLIMIT_SIGPENDING` soft resource limit defines a limit on the number of signals that can be queued to all processes owned by a particular real user ID.
+
+### Using realtime signals
+
+In order for a pair of processes to send and receive realtime signals, SUSv3 requires the following:
+
+- The sending process sends the signal plus its accompanying data using the `sigqueue()` system call.
+
+- he receiving process establishes a handler for the signal using a call to `sigaction()` that specifies the `SA_SIGINFO` flag.
+
+
+### Sending Realtime Signals
+
+The `sigqueue()` system call sends the realtime signal specified by *sig* to the process specified by *pid*.
+
+```c
+int sigqueue(pid_t pid , int sig , const union sigval value );
+```
+
+### Handling Realtime Signals
+
+We can handle realtime signals just like standard signals, using a normal (single- argument) signal handler. 
+
+Alternatively, we can handle a realtime signal using a three-argument signal handler established using the `SA_SIGINFO` flag.
