@@ -22,6 +22,14 @@
     - [Using realtime signals](#using-realtime-signals)
     - [Sending Realtime Signals](#sending-realtime-signals)
     - [Handling Realtime Signals](#handling-realtime-signals)
+  - [Waiting for a Signal Using a Mask: `sigsuspend()`](#waiting-for-a-signal-using-a-mask-sigsuspend)
+  - [Synchronously Waiting for a Signal](#synchronously-waiting-for-a-signal)
+  - [Fetching Signals via a File Descriptor](#fetching-signals-via-a-file-descriptor)
+  - [Interprocess Communication with Signals](#interprocess-communication-with-signals)
+  - [Earlier Signal APIs (System V and BSD)](#earlier-signal-apis-system-v-and-bsd)
+    - [The System V signal API](#the-system-v-signal-api)
+    - [The BSD signal API](#the-bsd-signal-api)
+  - [END](#end)
 
 ## Core Dump Files
 
@@ -243,7 +251,6 @@ In order for a pair of processes to send and receive realtime signals, SUSv3 req
 
 - he receiving process establishes a handler for the signal using a call to `sigaction()` that specifies the `SA_SIGINFO` flag.
 
-
 ### Sending Realtime Signals
 
 The `sigqueue()` system call sends the realtime signal specified by *sig* to the process specified by *pid*.
@@ -254,6 +261,120 @@ int sigqueue(pid_t pid , int sig , const union sigval value );
 
 ### Handling Realtime Signals
 
-We can handle realtime signals just like standard signals, using a normal (single- argument) signal handler. 
+We can handle realtime signals just like standard signals, using a normal (single- argument) signal handler.
 
 Alternatively, we can handle a realtime signal using a three-argument signal handler established using the `SA_SIGINFO` flag.
+
+---
+
+## Waiting for a Signal Using a Mask: `sigsuspend()`
+
+The `sigsuspend()` system call replaces the process signal mask by the signal set pointed to by *mask*, and then **suspends** execution of the process until a signal is
+**caught** and its handler returns.
+
+Once the handler returns, `sigsuspend()` restores the process signal mask to the value it had prior to the call.
+
+```c
+int sigsuspend(const sigset_t * mask );
+```
+
+Calling `sigsuspend()` is equivalent to **atomically** performing these operations:
+
+```c
+sigprocmask(SIG_SETMASK, &mask, &prevMask); /* Assign new mask */
+pause();
+sigprocmask(SIG_SETMASK, &prevMask, NULL); /* Restore old mask */
+```
+
+---
+
+## Synchronously Waiting for a Signal
+
+We can use the `sigwaitinfo()` system call to **synchronously** *accept* a signal.
+
+```c
+int sigwaitinfo(const sigset_t * set , siginfo_t * info );
+```
+
+The `sigtimedwait()` system call is a variation on `sigwaitinfo()`. The only difference is that `sigtimedwait()` allows us to specify a *time limit* for waiting.
+
+```c
+int sigtimedwait(const sigset_t * set , siginfo_t * info,
+                 const struct timespec * timeout );
+```
+
+---
+
+## Fetching Signals via a File Descriptor
+
+`signalfd()` system call, which creates a special file descriptor from which signals directed to the caller can be read.
+
+```c
+int signalfd(int fd , const sigset_t * mask , int flags );
+```
+
+---
+
+## Interprocess Communication with Signals
+
+Disadvantages of singals for IPC purposes:
+
+- The **asynchronous** nature of signals means that we face various problems, including reentrancy requirements, race conditions, and the correct handling of global variables from signal handlers.
+
+- Standard signals are not queued. Even for realtime signals, there are upper limits on the number of signals that may be queued. This means that in order to avoid loss of information, the process receiving the signals must have a method of informing the sender that it is ready to receive another signal.
+
+- A further problem is that signals carry only a limited amount of information.
+
+---
+
+## Earlier Signal APIs (System V and BSD)
+
+### The System V signal API
+
+As noted earlier, one important difference in the System V signal API is that when a handler is established with `signal()`, we get the older, **unreliable** signal semantics.
+
+To establish a signal handler with **reliable** semantics, System V provided the `sigset()` call
+
+```c
+void (*sigset(int sig , void (* handler )(int)))(int);
+```
+
+- The `sighold()` function adds a signal to the process signal mask.
+- The `sigrelse()` function removes a signal from the signal mask.
+- The `sigignore()` function sets a signal’s disposition to ignore.
+- The `sigpause()` function is similar to `sigsuspend(),` but removes just one signal from the process signal mask before suspending the process until the arrival of a signal.
+
+```c
+int sighold(int sig );
+int sigrelse(int sig );
+int sigignore(int sig );
+
+int sigpause(int sig );
+```
+
+### The BSD signal API
+
+The `sigvec()` function is analogous to`sigaction()`.
+
+```c
+int sigvec(int sig , struct sigvec * vec , struct sigvec * ovec );
+```
+
+- The `sigblock()` function adds a set of signals to the process signal mask. It is analogous to the `sigprocmask()` `SIG_BLOCK` operation.
+  
+- The `sigsetmask()` call specifies an absolute value for the signal mask. It is analogous to the `sigprocmask()` `SIG_SETMASK` operation.
+
+- The `sigpause()` function is analogous to`sigsuspend()`.
+
+```c
+int sigblock(int mask );
+int sigsetmask(int mask );
+
+int sigpause(int sigmask );
+
+int sigmask( sig );
+```
+
+---
+
+## END
