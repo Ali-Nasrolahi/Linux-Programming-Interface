@@ -14,6 +14,11 @@
     - [Accepting a Connection: `accept()`](#accepting-a-connection-accept)
     - [Connecting to a Peer Socket: `connect()`](#connecting-to-a-peer-socket-connect)
     - [I/O on Stream Sockets](#io-on-stream-sockets)
+    - [Connection Termination: `close()`](#connection-termination-close)
+  - [Datagram Sockets](#datagram-sockets)
+    - [Exchanging Datagrams: `recvfrom()` and `sendto()`](#exchanging-datagrams-recvfrom-and-sendto)
+    - [Using `connect()` with Datagram Sockets](#using-connect-with-datagram-sockets)
+  - [END](#end)
 
 **Sockets** are a method of IPC that allow data to be exchanged between applications, either on the same host (computer) or on different hosts connected by a network.
 
@@ -175,3 +180,62 @@ int connect(int sockfd , const struct sockaddr * addr , socklen_t addrlen );
 ```
 
 ### I/O on Stream Sockets
+
+A pair of connected stream sockets provides a bidirectional communication channel between the two endpoints.
+
+The semantics of I/O on connected stream sockets are similar to those for pipes:
+
+- To perform I/O, we use the `read()` and `write()` system calls (or the socket-specific `send()` and `recv()`). Since sockets are bidirectional, both calls may be used on each end of the connection.
+
+- A socket may be closed using the `close()` system call or as a consequence of the application terminating.
+
+### Connection Termination: `close()`
+
+The usual way of terminating a stream socket connection is to call`close()`.
+
+```c
+int close(int fd);
+```
+
+---
+
+## Datagram Sockets
+
+UDP connections are smiliar enough to TCP ones, therefore only differences are mentioned here.
+
+check pages *1159-1160* for full explanation.
+
+- To send a datagram, an application calls `sendto()`, which takes as one of its arguments the **address** of the socket to which the datagram is to be sent.
+
+- In order to receive a datagram, an application calls `recvfrom()`, which may block if no datagram has yet arrived. Because `recvfrom()` allows us to obtain the address of the sender, we can send a reply if desired.
+
+### Exchanging Datagrams: `recvfrom()` and `sendto()`
+
+The `recvfrom()` and `sendto()` system calls receive and send datagrams on a datagram socket.
+
+```c
+ssize_t recvfrom(int sockfd , void * buffer , size_t length , int flags ,
+    struct sockaddr * src_addr , socklen_t * addrlen );
+
+ssize_t sendto(int sockfd , const void * buffer , size_t length , int flags ,
+    const struct sockaddr * dest_addr , socklen_t addrlen );
+```
+
+### Using `connect()` with Datagram Sockets
+
+Even though datagram sockets are **connectionless**, the `connect()` system call serves a purpose when applied to datagram sockets.
+
+Calling `connect()` on a datagram socket causes the kernel to record a particular address as this socket’s peer.
+The term **connected datagram** socket is applied to such a socket. The term **unconnected datagram** socket is applied to a datagram socket on which `connect()` has *not* been called.
+
+After a datagram socket has been connected:
+
+- Datagrams can be sent through the socket using `write()` (or `send()`) and are automatically sent to the same peer socket.
+
+- Only datagrams sent by the peer socket may be read on the socket.
+
+The obvious advantage of setting the peer for a datagram socket is that we can use simpler I/O system calls when transmitting data on the socket.
+
+---
+
+## END
