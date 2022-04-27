@@ -8,6 +8,9 @@
   - [The Network Layer: IP](#the-network-layer-ip)
     - [IP transmits datagrams](#ip-transmits-datagrams)
     - [IP is connectionless and unreliable](#ip-is-connectionless-and-unreliable)
+    - [IP may fragment datagrams](#ip-may-fragment-datagrams)
+  - [IP Addresses](#ip-addresses)
+    - [IPv4 addresses](#ipv4-addresses)
 
 ## Internets
 
@@ -89,3 +92,25 @@ IP is described as a **connectionless** protocol, since it doesn’t provide the
 IP is also an **unreliable** protocol: it makes a “best effort” to transmit datagrams from the sender to the receiver, but *doesn’t guarantee* that packets will arrive in the order they were transmitted, that they won’t be duplicated, or even that they will arrive at all.
 
 Nor does IP provide error recovery (packets with header errors are silently discarded).
+
+> Reliability must be provided either by using a reliable transport-layer protocol (e.g., TCP) or within the application itself.
+
+### IP may fragment datagrams
+
+When an IP datagram is larger than the MTU, IP fragments (breaks up) the datagram into suitably sized units for transmission across the network. These fragments are then reassembled at the final destination to re-create the original datagram.
+
+IP fragmentation occurs transparently to higher protocol layers, but nevertheless is generally considered **undesirable**.
+
+The problem is that, because IP doesn’t perform retransmission, and a datagram can be reassembled at the destination only if all fragments arrive, the entire datagram is unusable if any fragment is lost or contains transmission errors.
+
+Modern TCP implementations employ algorithms to determine the MTU of a path between hosts, and accordingly break up the data they pass to IP, so that IP is *not asked* to transmit datagrams that exceed this size.
+
+---
+
+## IP Addresses
+
+An IP address consists of two parts: a **network ID**, which specifies the *network* on which a host resides, and a **host ID**, which identifies the *host* within that network.
+
+### IPv4 addresses
+
+An IPv4 address consists of 32 bits.
