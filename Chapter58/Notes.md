@@ -19,6 +19,14 @@
     - [User Datagram Protocol (UDP)](#user-datagram-protocol-udp)
       - [Selecting a UDP datagram size to avoid IP fragmentation](#selecting-a-udp-datagram-size-to-avoid-ip-fragmentation)
     - [Transmission Control Protocol (TCP)](#transmission-control-protocol-tcp)
+      - [Connection establishment](#connection-establishment)
+      - [Packaging of data in segments](#packaging-of-data-in-segments)
+      - [Acknowledgements, retransmissions, and timeouts](#acknowledgements-retransmissions-and-timeouts)
+      - [Sequencing](#sequencing)
+      - [Flow control](#flow-control)
+      - [Congestion control: slow-start and congestion-avoidance algorithms](#congestion-control-slow-start-and-congestion-avoidance-algorithms)
+  - [Requests for Comments (RFCs)](#requests-for-comments-rfcs)
+  - [END](#end)
 
 ## Internets
 
@@ -231,3 +239,81 @@ In practice, many UDP-based applications opt for a still lower limit of 512 byte
 ### Transmission Control Protocol (TCP)
 
 TCP provides a reliable, connection-oriented, bidirectional, byte-stream communication channel between two endpoints.
+
+#### Connection establishment
+
+Before communication can commence, TCP establishes a communication channel between the two endpoints. During connection establishment, the sender and receiver can exchange options to advertise parameters for the connection.
+
+#### Packaging of data in segments
+
+Data is broken into segments, each of which contains a checksum to allow the detection of end-to-end transmission errors. Each segment is transmitted in a single IP datagram.
+
+#### Acknowledgements, retransmissions, and timeouts
+
+When a TCP segment arrives at its destination without errors, the receiving TCP sends a positive acknowledgement to the sender, informing it of the successfully delivered data.
+
+If a segment arrives with errors, then it is discarded, and no acknowledgement is sent.
+
+To handle the possibility of segments that never arrive or are discarded, the sender starts a timer when each segment is transmitted. If an acknowledgement is not received before the timer expires, the segment is retransmitted.
+
+#### Sequencing
+
+Each byte that is transmitted over a TCP connection is assigned a logical sequence number. This number indicates the position of that byte in the data stream for the connection.
+
+Attaching sequence numbers to each segment serves a variety of purposes:
+
+- The sequence number allows TCP segments to be assembled in the correct order at the destination, and then passed as a byte stream to the application layer.
+
+- The acknowledgement message passed from the receiver back to the sender can use the sequence number to identify which TCP segment was received.
+
+- The receiver can use the sequence number to eliminate duplicate segments.
+
+#### Flow control
+
+Flow control prevents a **fast sender** from overwhelming a **slow receiver**.
+
+To implement flow control, the receiving TCP maintains a **buffer** for incoming data.
+
+The TCP flow-control algorithm employs a so-called **sliding window** algorithm, which allows unacknowledged segments containing a total of up `N` (the offered window size) bytes to be in transit between the sender and receiver.
+> If a receiving TCP’s incoming data buffer fills completely, then the window is said to be closed, and the sending TCP stops transmitting.
+
+#### Congestion control: slow-start and congestion-avoidance algorithms
+
+TCP’s congestion-control algorithms are designed to prevent a **fast sender** from overwhelming a network.  
+If a sending TCP transmits packets faster than they can be relayed by an intervening router, that router will start dropping packets.
+
+> This could lead to high rates of packet loss and, consequently, serious performance degradation, if the sending TCP kept retransmitting these dropped segments at the same rate.
+
+TCP’s congestion-control algorithms are important in two circumstances:
+
+- *After connection establishment*: At this time, the sender could start by immediately injecting as many segments into the network as would be permitted by the window size advertised by the receiver.  
+The problem here is that if the network can’t handle this flood of segments, the sender risks overwhelming the network immediately.
+
+- *When congestion is detected*: If the sending TCP detects that congestion is occurring, then it must reduce its transmission rate.  
+TCP detects that congestion is occurring based on the assumption that segment loss because of transmission errors is very low; thus, if a packet is lost, the cause is assumed to be congestion.
+
+TCP’s congestion-control strategy employs two algorithms in combination:
+
+- slow start and
+- congestion avoidance.
+
+The **slow-start** algorithm causes the sending TCP to initially transmit segments at a slow rate, but allows it to exponentially increase the rate as these segments are acknowledged by the receiving TCP.
+
+However, if unrestrained, slow start’s exponential increase in the transmission rate could mean that the sender would soon *overwhelm the network*.
+
+TCP’s **congestion-avoidance** algorithm prevents this, by placing a **governor** on the *rate increase*.
+
+In congestion-avoidance algorithm, as the sender receives acknowledgements from the peer
+TCP, the congestion window initially grows **exponentially**.
+
+However, once the congestion window reaches a certain threshold believed to be close to the transmission capacity of the network, its growth becomes **linear**, rather than exponential.
+
+---
+
+## Requests for Comments (RFCs)
+
+Each of the Internet protocols that we discuss is defined in an RFC document—a formal protocol specification.
+
+---
+
+## END
