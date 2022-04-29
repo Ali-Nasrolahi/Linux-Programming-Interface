@@ -11,6 +11,14 @@
     - [IP may fragment datagrams](#ip-may-fragment-datagrams)
   - [IP Addresses](#ip-addresses)
     - [IPv4 addresses](#ipv4-addresses)
+    - [IPv6 addresses](#ipv6-addresses)
+  - [The Transport Layer](#the-transport-layer)
+    - [Port Numbers](#port-numbers)
+      - [Well-known, registered, and privileged ports](#well-known-registered-and-privileged-ports)
+      - [Ephemeral ports](#ephemeral-ports)
+    - [User Datagram Protocol (UDP)](#user-datagram-protocol-udp)
+      - [Selecting a UDP datagram size to avoid IP fragmentation](#selecting-a-udp-datagram-size-to-avoid-ip-fragmentation)
+    - [Transmission Control Protocol (TCP)](#transmission-control-protocol-tcp)
 
 ## Internets
 
@@ -114,3 +122,112 @@ An IP address consists of two parts: a **network ID**, which specifies the *netw
 ### IPv4 addresses
 
 An IPv4 address consists of 32 bits.
+
+When an organization applies for a range of IPv4 addresses for its hosts, it receives a 32-bit **network address** and a corresponding 32-bit **network mask**.
+
+> In binary form, this mask consists of a sequence of 1s in the leftmost bits, followed by a sequence of 0s to fill out the remainder of the mask.  
+> 1s indicate which part of the address contains the assigned network ID, while the 0s indicate which part of the address is available to the organization to assign as unique host IDs on its network.
+
+Two addresses can’t be assigned.
+
+- One of these is the address whose host ID is all **0 bits**, which is used to
+identify the *network* itself.
+  > like 192.168.1.0 or 172.16.60.0
+- The other is the address whose host ID is all **1 bits** which is *subnet broadcast address*.
+  > like 192.168.1.255
+
+The special address `127.0.0.1` is normally defined as the **loopback** address.
+> A datagram sent to this address never actually reaches the network, but instead automatically loops back to become input to the sending host.
+
+For use in a C program, the integer constant `INADDR_LOOPBACK` is defined for this address.
+
+The constant `INADDR_ANY` is the so-called IPv4 **wildcard address**.
+
+The wildcard IP address is useful for applications that bind Internet domain sockets on **multihomed hosts**.
+
+> If an application on a multihomed host binds a socket to just one of its host’s IP addresses, then that socket can receive only UDP datagrams or TCP connection requests sent to that IP address.
+
+Typically, IPv4 addresses are **subnetted**.
+
+**Subnetting** divides the host ID part of an IPv4 address into two parts:
+
+- a *subnet ID*
+- and a *host ID*
+
+### IPv6 addresses
+
+The key difference is that IPv6 addresses consist of **128 bits**, and the first few bits of the address are a *format prefix*, indicating the address type.
+
+IPv6 addresses are typically written as a series of *16-bit* hexadecimal numbers separated by *colons*, as in the following:
+
+> like F000:0:0:0:0:0:A:1
+
+IPv6 addresses often include a sequence of zeros and, as a notational convenience, two colons ( `::` ) can be employed to indicate such a sequence.
+
+> such as F000::A:1
+
+IPv6 also provides equivalents of the IPv4’s loopback address (127 zeros, followed by a one, thus `::1` )  
+and wildcard address (all zeros, written as either `0::0` or `::` ).
+
+---
+
+## The Transport Layer
+
+There are two widely used transport-layer protocols in the TCP/IP suite:
+
+- User Datagram Protocol (**UDP**) is the protocol used for datagram sockets.
+- Transmission Control Protocol (**TCP**) is the protocol used for stream sockets.
+
+### Port Numbers
+
+The task of the transport protocol is to provide an end-to-end communication service to applications residing on different hosts (or sometimes on the same host).
+
+In order to do this, the transport layer requires a method of differentiating the applications on a host.
+
+In TCP and UDP, this differentiation is provided by a *16-bit* **port number**.
+
+#### Well-known, registered, and privileged ports
+
+Some **well-known** port numbers are **permanently** assigned to specific applications (also known as *services*).
+> the ssh daemon uses the well-known port 22, and HTTP uses the well-known port 80.
+
+Well-known ports are assigned numbers in the range *0 to 1023* by a central authority, the Internet Assigned Numbers Authority.
+
+IANA also records **registered** ports, which are allocated to application developers on a less stringent basis.  
+The range of IANA registered ports is *1024 to 41951*. (Not all port numbers in this range are registered.)
+
+In most TCP/IP implementations (including Linux), the port numbers in the range *0 to 1023* are also **privileged**, meaning that only privileged processes may bind to these ports.
+
+> Sometimes, privileged ports are referred to as **reserved** ports
+
+#### Ephemeral ports
+
+If an application doesn’t select a particular port (i.e., in sockets terminology, it doesn’t `bind()` its socket to a particular port), then TCP and UDP assign a unique
+**ephemeral** port (i.e., short-lived) number to the socket.
+
+> TCP and UDP also assign an ephemeral port number if we bind a socket to port 0.
+
+IANA specifies the ports in the range 49152 to 65535 as **dynamic** or **private**, with the intention that these ports can be used by local applications and assigned as ephemeral ports.
+
+On Linux, the range of ephemeral port is defined by (and can be modified via) two numbers contained in the file `/proc/sys/net/ipv4/ip_local_port_range`.
+
+### User Datagram Protocol (UDP)
+
+UDP adds just two features to IP:
+
+- port numbers and
+- a data checksum to allow the detection of errors in the transmitted data.
+
+> Like IP, UDP is connectionless. Since it adds no reliability to IP, UDP is likewise unreliable.
+
+#### Selecting a UDP datagram size to avoid IP fragmentation
+
+While TCP contains mechanisms for avoiding IP fragmentation, UDP does not.
+
+UDP-based applications that aim to avoid IP fragmentation typically adopt a conservative approach, which is to ensure that the transmitted IP datagram is less than the IPv4 minimum reassembly buffer size of **576 bytes**.
+
+In practice, many UDP-based applications opt for a still lower limit of 512 bytes for their datagrams
+
+### Transmission Control Protocol (TCP)
+
+TCP provides a reliable, connection-oriented, bidirectional, byte-stream communication channel between two endpoints.
