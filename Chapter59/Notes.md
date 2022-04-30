@@ -18,6 +18,7 @@
   - [Domain Name System (DNS)](#domain-name-system-dns)
   - [The `/etc/services` File](#the-etcservices-file)
   - [Protocol-Independent Host and Service Conversion](#protocol-independent-host-and-service-conversion)
+    - [The `getaddrinfo()` Function](#the-getaddrinfo-function)
 
 ## Internet Domain Sockets
 
@@ -125,7 +126,7 @@ The reverse conversions are performed by `gethostbyaddr()` and `getservbyport()`
 
 ### Converting host and service names to and from binary form (modern)
 
-The `getaddrinfo()` function is the modern successor to both `gethostbyname()` and`getservbyname().` 
+The `getaddrinfo()` function is the modern successor to both `gethostbyname()` and`getservbyname().`
 
 The `getnameinfo()` function performs the reverse translation, converting an IP address and port number into the corresponding hostname and service name.
 
@@ -155,17 +156,23 @@ check pages *1207-1209* for an example of IPv6 application.
 
 Before the advent of DNS, mappings between hostnames and IP addresses were defined in a manually maintained local file, `/etc/hosts`.
 
-
 check pages *1209-1212* for full explanation.
 
 ---
 
-## The `/etc/services` File 
+## The `/etc/services` File
 
-Well-known port numbers are centrally registered by IANA. Each of these ports has a corresponding **service name**. 
+Well-known port numbers are centrally registered by IANA. Each of these ports has a corresponding **service name**.
 
 Because service numbers are centrally managed and are less volatile than IP addresses, an equivalent of the DNS server is usually not necessary. Instead, the port numbers and service names are recorded in the file `/etc/services`.
 
 ---
 
 ## Protocol-Independent Host and Service Conversion
+
+### The `getaddrinfo()` Function
+
+```c
+int getaddrinfo(const char * host , const char * service ,
+                const struct addrinfo * hints , struct addrinfo ** result );
+```
