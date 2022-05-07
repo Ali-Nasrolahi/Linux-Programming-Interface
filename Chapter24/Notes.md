@@ -6,6 +6,10 @@
     - [File Sharing Between Parent and Child](#file-sharing-between-parent-and-child)
     - [Memory Semantics of `fork()`](#memory-semantics-of-fork)
     - [Controlling a process’s memory footprint](#controlling-a-processs-memory-footprint)
+  - [The `vfork()` System Call](#the-vfork-system-call)
+  - [Race Conditions After `fork()`](#race-conditions-after-fork)
+  - [Avoiding Race Conditions by Synchronizing with Signals](#avoiding-race-conditions-by-synchronizing-with-signals)
+  - [END](#end)
 
 ## Overview of `fork()`, `exit()`, `wait()`, and `execve()`
 
@@ -75,3 +79,64 @@ Most modern UNIX implementations, including Linux, use two techniques to avoid s
 ### Controlling a process’s memory footprint
 
 We can combine the use of `fork()` and `wait()` to control the memory footprint of a process.
+
+The process’s **memory footprint** is the range of *virtual memory pages* used by the process as affected by modification of the heap as a consequence of calls to `malloc()` and `free()`.
+
+Suppose that we bracket a call to some function, `func()`, using `fork()` and`wait()`.
+After executing this code, we know that the memory footprint of the parent is unchanged from the point before `func()` was called, since all possible changes will have occurred in the child process. This can be useful for the following reasons:
+
+- If we know that func() causes memory leaks or excessive fragmentation of the
+heap, this technique eliminates the problem.
+
+- Suppose that we have some algorithm that performs memory allocation while doing a tree analysis. We could code such a program to make calls to `free()` to deallocate all of the allocated memory.
+
+---
+
+## The `vfork()` System Call
+
+Early BSD implementations were among those in which `fork()` performed a **literal duplication** of the parent’s data, heap, and stack.
+> As noted earlier, this is wasteful, especially if the `fork()` is followed by an immediate`exec()`.
+
+For this reason, later versions of BSD introduced the `vfork()` system call, which was far more efficient than BSD’s`fork()`.
+
+Like `fork()`, `vfork()` is used by the calling process to create a new child process.  
+
+However, `vfork()` is expressly designed to be used in programs where the child performs an **immediate** `exec()` call.
+
+```c
+pid_t vfork(void);
+```
+
+Two features distinguish the `vfork()` system call from `fork()` and make it more efficient:
+
+- **No duplication of virtual memory pages** or page tables is done for the child process. Instead, the child shares the parent’s memory until it either performs a successful `exec()` or calls `_exit()` to terminate.
+
+- Execution of the parent process is **suspended** until the child has performed an `exec()` or`_exit()`.
+
+Since the child is using the parent’s memory, any changes made by the child to the data, heap, or stack segments will be *visible to the parent* once it resumes.
+
+Furthermore, if the child performs a function return between the `vfork()` and a later `exec()` or `_exit(),` this will also affect the parent.
+
+The semantics of `vfork()` mean that after the call, the child is **guaranteed** to be scheduled for the CPU before the parent.
+
+---
+
+## Race Conditions After `fork()`
+
+After a `fork()`, it is **indeterminate** which process—the parent or the child—next has access to the CPU .
+
+Applications that implicitly or explicitly rely on a particular sequence of execution in order to achieve correct results are open to failure due to **race conditions**.
+
+Some more recent experiments reversed the kernel developers’ assessment of whether it was better to run the child or the parent first after `fork()`, and, since Linux 2.6.32, it is once more the **parent** that is, by default, run **first** after a`fork()`.
+
+This default can be changed by assigning a nonzero value to the Linux-specific `/proc/sys/kernel/sched_child_runs_first` file.
+
+---
+
+## Avoiding Race Conditions by Synchronizing with Signals
+
+After a `fork()`, if either process needs to wait for the other to complete an action, then the active process can **send a signal** after completing the action; the other process **waits** for the signal.
+
+---
+
+## END
