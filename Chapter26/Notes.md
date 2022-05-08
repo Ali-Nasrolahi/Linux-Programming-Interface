@@ -9,6 +9,9 @@
     - [The `waitid()` System Call](#the-waitid-system-call)
     - [The `wait3()` and `wait4()` System Calls](#the-wait3-and-wait4-system-calls)
   - [Orphans and Zombies](#orphans-and-zombies)
+  - [The `SIGCHLD` Signal](#the-sigchld-signal)
+    - [Establishing a Handler for `SIGCHLD`](#establishing-a-handler-for-sigchld)
+      - [Design issues for `SIGCHLD` handlers](#design-issues-for-sigchld-handlers)
 
 ## Waiting on a Child Process
 
@@ -97,3 +100,61 @@ pid_t wait4(pid_t pid , int * status , int options , struct rusage * rusage );
 ---
 
 ## Orphans and Zombies
+
+The lifetimes of parent and child processes are usually *not the same*.
+> either the parent outlives the child or vice versa.
+
+This raises two questions:
+
+1. Who becomes the parent of an **orphaned** child?
+     - The orphaned child is adopted by `init`, the ancestor of all processes, whose process ID is `1`.
+     > In other words, after a child’s parent terminates, a call to `getppid()` will return the value 1.
+2. What happens to a child that terminates **before** its parent has had a chance to perform a `wait()`?
+    > The point here is that, although the child has finished its work, the parent should still be permitted to perform a `wait()` at some later time to determine how the child terminated.
+    - The kernel deals with this situation by turning the child into a **zombie**. This means that **most of the resources** held by the child are released back to the system to be reused by other processes.
+    >The only part of the process that remains is an entry in the kernel’s process table recording the child’s PID, termination status, and resource usage statistics.
+
+When the parent does perform a `wait()`, the kernel **removes** the *zombie*, since the last remaining information about the child is no longer required.
+
+On the other hand, if the parent terminates **without** doing a `wait()`, then the `init` process adopts the child and **automatically** performs a `wait()`, thus removing the zombie process from the system.
+
+If a large number of **zombie children** are created, they will eventually fill the *kernel process table*, preventing the creation of new processes.
+
+Since the zombies can’t be killed by a signal, the only way to remove them from the system is to **kill their parent**, at which time the zombies are adopted and waited on by `init`, and consequently removed from the system.
+
+---
+
+## The `SIGCHLD` Signal
+
+The termination of a child process is an event that occurs **asynchronously**.
+> A parent can’t predict when one of its child will terminate.
+
+We have already seen that the parent should use `wait()` in order to prevent the accumulation of *zombie* children, and have looked at two ways in which this can be done:
+
+- The parent can call `wait()`, without specifying the `WNOHANG` flag, in which case the call will **block** if a child has not already terminated.
+
+- The parent can periodically perform a **nonblocking** check (a poll) for dead children via a call to `waitpid()` specifying the `WNOHANG` flag.
+
+Both of these approaches can be **inconvenient**.
+
+### Establishing a Handler for `SIGCHLD`
+
+The `SIGCHLD` signal is sent to a parent process whenever one of its children **terminates**.
+> By default, this signal is **ignored**, but we can catch it by installing a signal handler.
+
+Within the signal handler, we can use `wait()` to reap the *zombie child*.
+
+if a second and third child terminate in quick succession while a `SIGCHLD` handler is executing for an already terminated child, then, although `SIGCHLD` is generated twice, it is **queued only once** to the parent.
+
+> As a result, if the parent’s `SIGCHLD` handler called `wait()` only once each time it was invoked, the handler might fail to reap some zombie children.
+
+The solution is to loop inside the `SIGCHLD` handler, **repeatedly** calling `waitpid()` with the `WNOHANG` flag until there are no more dead children to be reaped.
+
+> body of a `SIGCHLD` handler simply consists of the following code, which reaps any dead children without checking their status:
+
+```c
+while (waitpid(-1, NULL, WNOHANG) > 0)
+  continue;
+```
+
+#### Design issues for `SIGCHLD` handlers
