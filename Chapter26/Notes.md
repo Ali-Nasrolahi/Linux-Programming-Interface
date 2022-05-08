@@ -12,6 +12,12 @@
   - [The `SIGCHLD` Signal](#the-sigchld-signal)
     - [Establishing a Handler for `SIGCHLD`](#establishing-a-handler-for-sigchld)
       - [Design issues for `SIGCHLD` handlers](#design-issues-for-sigchld-handlers)
+    - [Delivery of `SIGCHLD` for Stopped Children](#delivery-of-sigchld-for-stopped-children)
+    - [Ignoring Dead Child Processes](#ignoring-dead-child-processes)
+      - [Deviations from SUSv3 in older Linux kernels](#deviations-from-susv3-in-older-linux-kernels)
+      - [The `sigaction()` `SA_NOCLDWAIT` flag](#the-sigaction-sa_nocldwait-flag)
+      - [The System V SIGCLD signal](#the-system-v-sigcld-signal)
+  - [END](#end)
 
 ## Waiting on a Child Process
 
@@ -158,3 +164,61 @@ while (waitpid(-1, NULL, WNOHANG) > 0)
 ```
 
 #### Design issues for `SIGCHLD` handlers
+
+Suppose that, at the time we establish a handler for `SIGCHLD` , there is already a terminated child for this process.
+
+- Does the kernel then immediately generate a `SIGCHLD` signal for the parent?
+  > SUSv3 leaves this point unspecified.
+  - Some System V–derived implementations do generate a `SIGCHLD` in these circumstances; other implementations, including Linux, do not.
+
+A portable application can make this difference invisible by establishing the `SIGCHLD` handler **before creating any children**.
+
+we noted that using a system call from within a signal handler **may change** the value of the global variable `errno`.
+
+For this reason, it is sometimes necessary to code a `SIGCHLD` handler to **save** `errno` in a local variable on entry to the handler, and then **restore** the `errno` value just prior to returning.
+
+### Delivery of `SIGCHLD` for Stopped Children
+
+Just as `waitpid()` can be used to monitor stopped children, so is it possible for a parent process to receive the `SIGCHLD` signal when one of its children is **stopped** by a signal.
+
+This behavior is controlled by the `SA_NOCLDSTOP` flag when using `sigaction()` to establish a handler for the `SIGCHLD` signal.
+
+If this flag is **omitted**, a `SIGCHLD` signal is **delivered** to the parent when one of its children stops; if the flag is present, `SIGCHLD` is **not delivered** for stopped children
+
+### Ignoring Dead Child Processes
+
+Explicitly setting the disposition of `SIGCHLD` to `SIG_IGN` causes any child process that subsequently terminates to be **immediately removed** from the system instead of being converted into a **zombie**.
+
+In this case, since the status of the child process is simply discarded, a subsequent call to `wait()` **can’t return** any information for the terminated child.
+
+#### Deviations from SUSv3 in older Linux kernels
+
+SUSv3 specifies that if the disposition of `SIGCHLD` is set to `SIG_IGN`, the resource usage information for the child should be **discarded** and not included in the totals
+returned when the parent makes a call to `getrusage()` specifying the `RUSAGE_CHILDREN` flag.
+
+However, on Linux versions before kernel 2.6.9, the CPU times and resources used by the child are recorded and are visible in calls to `getrusage()`.
+
+#### The `sigaction()` `SA_NOCLDWAIT` flag
+
+SUSv3 specifies the `SA_NOCLDWAIT` flag, which can be used when setting the disposition of the `SIGCHLD` signal using `sigaction()`. This flag produces behavior similar to
+that when the disposition of `SIGCHLD` is set to `SIG_IG`.
+
+he principal difference between setting the disposition of `SIGCHLD` to `SIG_IGN` and employing `SA_NOCLDWAIT` is that, when establishing a handler with `SA_NOCLDWAIT`, SUSv3 leaves it unspecified whether or not a `SIGCHLD` signal is sent to the parent
+when a child terminates.
+
+In some UNIX implementations, including Linux, the kernel **does generate** a `SIGCHLD` signal for the parent process. On other UNIX implementations, `SIGCHLD` is not generated.
+
+#### The System V SIGCLD signal
+
+On Linux, the name `SIGCLD` is provided as a synonym for the `SIGCHLD` signal.
+
+The key difference between BSD `SIGCHLD` and System V `SIGCLD` lies in what happens when the disposition of the signal was set to `SIG_IGN`:
+
+- On historical BSD implementations, the system **continues** to generate zombies for unwaited-for children, even when `SIGCHLD` is ignored.
+
+- On System V, using `signal()` (but not `sigaction()`) to ignore `SIGCLD` has the result
+that zombies are **not generated** when children died.
+
+---
+
+## END
