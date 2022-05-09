@@ -12,6 +12,12 @@
     - [Using the script `optional-arg`](#using-the-script-optional-arg)
     - [Executing scripts with `execlp()` and `execvp()`](#executing-scripts-with-execlp-and-execvp)
   - [File Descriptors and `exec()`](#file-descriptors-and-exec)
+    - [The close-on-exec flag (`FD_CLOEXEC`)](#the-close-on-exec-flag-fd_cloexec)
+  - [Signals and `exec()`](#signals-and-exec)
+  - [Executing a Shell Command: `system()`](#executing-a-shell-command-system)
+    - [Avoid using `system()` in set-user-ID and set-group-ID programs](#avoid-using-system-in-set-user-id-and-set-group-id-programs)
+  - [Implementing `system()`](#implementing-system)
+  - [END](#end)
 
 ## Executing a New Program: `execve()`
 
@@ -132,3 +138,59 @@ If either of these functions finds a file that has *execute permission* turned o
 ---
 
 ## File Descriptors and `exec()`
+
+By default, all file descriptors opened by a program that calls `exec()` **remain open** across the `exec()` and are available for use by the new program.
+
+> This is frequently useful, because the calling program may open files on particular descriptors, and these files are automatically available to the new program, without it needing to know the names of, or open, the files.
+
+### The close-on-exec flag (`FD_CLOEXEC`)
+
+Sometimes, it may be desirable to ensure that certain file descriptors are **closed** before an `exec()`.
+
+We could do this by calling `close()` on all such descriptors, but this suffers the following limitations:
+
+- The file descriptor may have been opened by a library function. This function has no mechanism to force the main program to close the file descriptor before the `exec()` is performed.
+
+- If the `exec()` call fails for some reason, we may want to keep the file descriptors open. If they are already closed, it may be difficult, or impossible, to reopen them so that they refer to the same files.
+
+For these reasons, the kernel provides a `close-on-exec` flag for each file descriptor.
+
+If this flag is set, then the file descriptor is **automatically closed** during a successful `exec()`, but **left open** if the `exec()` fails.
+
+When `dup()`, `dup2()`, or `fcntl()` is used to create a duplicate of a file descriptor, the `close-on-exec` flag is **always cleared** for the duplicate descriptor.
+
+---
+
+## Signals and `exec()`
+
+Because the *singal handlers* disappear, the kernel resets the dispositions of all handled signals to `SIG_DFL`.
+
+The dispositions of all other signals are left **unchanged** by an `exec()`.
+
+The destruction of the old program’s data, heap, and stack also means that any alternate **signal stack** established by a call to `sigaltstack()` is **lost**.
+
+---
+
+## Executing a Shell Command: `system()`
+
+The `system()` function allows the calling program to execute an arbitrary **shell command**.
+
+```c
+int system(const char * command );
+```
+
+### Avoid using `system()` in set-user-ID and set-group-ID programs
+
+Set-user-ID and set-group-ID programs **should never** use `system()` while operating under the program’s *privileged identifier*.
+
+The shell’s reliance on various *environment variables* to control its operation means that the use of `system()` **inevitably** opens the door for a **system security breach**.
+
+---
+
+## Implementing `system()`
+
+check pages *582-588* for full implementation.
+
+---
+
+## END
