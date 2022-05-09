@@ -78,12 +78,11 @@ check page *600* for full list of bitmasks.
 
 The `clone()` flags argument is a combination (ORing) of the bit-mask values described in pages **603-609**.
 
-**Kernel scheduling entity** (KSE): is used in some texts to refer to the objects that are dealt with by the **kernel scheduler**. 
+**Kernel scheduling entity** (KSE): is used in some texts to refer to the objects that are dealt with by the **kernel scheduler**.
 
 Really, *threads* and *processes* are simply *KSEs* that provide for greater and lesser **degrees of sharing** of attributes with other *KSEs*.
 
 > such attributes are (virtual memory, open file descriptors, signal dispositions, process ID, and so on)
-
 
 ### Extensions to `waitpid()` for Cloned Children
 
