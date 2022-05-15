@@ -170,7 +170,16 @@ Because service numbers are centrally managed and are less volatile than IP addr
 
 ## Protocol-Independent Host and Service Conversion
 
+The `getaddrinfo()` function converts host and service names to IP addresses and port numbers.
+> It was defined in POSIX.1g as the (**reentrant**) successor to the obsolete `gethostbyname()` and `getservbyname()` functions.
+
+The `getnameinfo()` function is the converse of `getaddrinfo()`. It translates a socket
+address structure (either IPv4 or IPv6) to strings containing the corresponding **host** and **service** name.
+> This function is the (**reentrant**) equivalent of the obsolete `gethostbyaddr()` and `getservbyport()` functions.
+
 ### The `getaddrinfo()` Function
+
+Given a **host name** and a **service name**, `getaddrinfo()` returns a list of socket address structures, each of which contains an IP address and port number.
 
 ```c
 int getaddrinfo(const char * host , const char * service ,
