@@ -10,6 +10,7 @@
     - [Pipes allow communication between related processes](#pipes-allow-communication-between-related-processes)
     - [Closing unused pipe file descriptors](#closing-unused-pipe-file-descriptors)
   - [Pipes as a Method of Process Synchronization](#pipes-as-a-method-of-process-synchronization)
+  - [Using Pipes to Connect Filters](#using-pipes-to-connect-filters)
 
 ## Overview
 
@@ -34,6 +35,8 @@ If multiple processes are writing to a single pipe, then it is guaranteed that t
 The `PIPE_BUF` limit affects exactly when data is transferred to the pipe. When writing up to `PIPE_BUF` bytes, `write()` will block if necessary until sufficient space is available in the pipe so that it can complete the operation atomically. When more than `PIPE_BUF` bytes are being written, write() transfers as much data as possible to fill the pipe, and then blocks until data has been removed from the pipe by some reading process.
 
 A pipe is simply a buffer maintained in kernel memory. This buffer has a maximum capacity. Once a pipe is full, further writes to the pipe block until the reader removes some data from the pipe.
+
+---
 
 ## Creating and Using Pipes
 
@@ -60,4 +63,17 @@ When a process tries to write to a pipe for which no process has an open read de
 
 One final reason for closing unused file descriptors is that it is only after all file descriptors in all processes that refer to a pipe are closed that the pipe is destroyed and its resources released for reuse by other processes. At this point, any unread data in the pipe is lost.
 
+---
+
 ## Pipes as a Method of Process Synchronization
+
+To perform the synchronization,
+
+1. the parent builds a pipe before creating the child processes.
+2. Each child inherits a file descriptor for the write end of the pipe and closes this descriptor once it has completed its action.
+3. After all of the children have closed their file descriptors for the write end of the pipe, the parent’s `read()`
+4. from the pipe will complete, returning end-of-file (0). At this point, the parent is free to carry on to do other work.
+
+---
+
+## Using Pipes to Connect Filters
