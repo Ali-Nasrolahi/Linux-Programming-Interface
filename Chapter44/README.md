@@ -11,6 +11,9 @@
     - [Closing unused pipe file descriptors](#closing-unused-pipe-file-descriptors)
   - [Pipes as a Method of Process Synchronization](#pipes-as-a-method-of-process-synchronization)
   - [Using Pipes to Connect Filters](#using-pipes-to-connect-filters)
+  - [Talking to a Shell Command via a Pipe: `popen()`](#talking-to-a-shell-command-via-a-pipe-popen)
+  - [Pipes and stdio Buffering](#pipes-and-stdio-buffering)
+  - [FIFOs](#fifos)
 
 ## Overview
 
@@ -77,3 +80,36 @@ To perform the synchronization,
 ---
 
 ## Using Pipes to Connect Filters
+
+---
+
+## Talking to a Shell Command via a Pipe: `popen()`
+
+A common use for pipes is to execute a shell command and either read its output or send it some input. The `popen()` and `pclose()` functions are provided to simplify this task.
+
+```c
+FILE *popen(const char *command, const char *mode);
+
+int pclose(FILE *stream);
+```
+
+The `popen()` function creates a pipe, and then forks a child process that execs a shell, which in turn creates a child process to execute the string given in command.
+he `mode` argument is a string that determines whether the calling process will read from the pipe (mode is r) or write to it (mode is w).
+
+After the `popen()` call, the calling process uses the pipe to read the output of **command** or to send input to it. Just as with pipes created using `pipe()`, when reading from the pipe, the calling process encounters end-of-file once command has closed the write end of the pipe; when writing to the pipe, it is sent a `SIGPIPE` signal, and gets the `EPIPE` error, if command has closed the read end of the pipe.
+
+Once I/O is complete, the `pclose()` function is used to close the pipe and wait for the child shell to terminate.
+
+When performing a wait to obtain the status of the child shell, SUSv3 requires that `pclose(),` like `system()`, should automatically restart the internal call that it makes to `waitpid()` if that call is interrupted by a signal handler.
+
+As with `system()`, `popen()` **should never** be used from privileged programs.
+
+---
+
+## Pipes and stdio Buffering
+
+---
+
+## FIFOs
+
+Semantically, a FIFO is similar to a pipe. The principal difference is that a FIFO has a name within the file system and is opened in the same way as a regular file. This allows a FIFO to be used for communication between unrelated processes.
