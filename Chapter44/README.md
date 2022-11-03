@@ -14,6 +14,7 @@
   - [Talking to a Shell Command via a Pipe: `popen()`](#talking-to-a-shell-command-via-a-pipe-popen)
   - [Pipes and stdio Buffering](#pipes-and-stdio-buffering)
   - [FIFOs](#fifos)
+  - [A Client-Server Application Using FIFOs](#a-client-server-application-using-fifos)
 
 ## Overview
 
@@ -113,3 +114,18 @@ As with `system()`, `popen()` **should never** be used from privileged programs.
 ## FIFOs
 
 Semantically, a FIFO is similar to a pipe. The principal difference is that a FIFO has a name within the file system and is opened in the same way as a regular file. This allows a FIFO to be used for communication between unrelated processes.
+
+Once a FIFO has been opened, we use the same I/O system calls as are used with pipes and other files (i.e., `read()`, `write()`, and `close())`. Just as with pipes, a FIFO has a write end and a read end, and data is read from the pipe in the same order as it is written. This fact gives FIFOs their name: first in, first out. FIFOs are also sometimes known as **named pipes**.
+
+The `mkfifo()` function creates a new FIFO with the given pathname
+
+```c
+int mkfifo(const char *pathname, mode_t mode);
+
+```
+
+Opening a FIFO has somewhat unusual semantics. Generally, the only sensible use of a FIFO is to have a reading process and a writing process on each end.  Therefore, by default, opening a FIFO for reading (the open() `O_RDONLY` flag) blocks until another process opens the FIFO for writing (the `open()` `O_WRONLY` flag). Conversely, opening the FIFO for writing blocks until another process opens the FIFO for reading.  In other words, opening a FIFO synchronizes the reading and writing processes. If the opposite end of a FIFO is already open (perhaps because a pair of processes have already opened each end of the FIFO), then `open()` succeeds immediately.
+
+---
+
+## A Client-Server Application Using FIFOs
