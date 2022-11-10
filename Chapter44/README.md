@@ -15,6 +15,8 @@
   - [Pipes and stdio Buffering](#pipes-and-stdio-buffering)
   - [FIFOs](#fifos)
   - [A Client-Server Application Using FIFOs](#a-client-server-application-using-fifos)
+  - [Nonblocking I/O](#nonblocking-io)
+  - [Semantics of `read()` and `write()` on Pipes and FIFOs](#semantics-of-read-and-write-on-pipes-and-fifos)
 
 ## Overview
 
@@ -129,3 +131,25 @@ Opening a FIFO has somewhat unusual semantics. Generally, the only sensible use 
 ---
 
 ## A Client-Server Application Using FIFOs
+
+---
+
+## Nonblocking I/O
+
+As noted earlier, when a process opens one end of a FIFO, it **blocks** if the other end of the FIFO has not yet been opened. Sometimes, it is desirable *not to block*, and for this purpose, the `O_NONBLOCK` flag can be specified when calling `open()`.
+
+The `O_NONBLOCK` flag changes things only if the other end of the FIFO is not yet open, and the effect depends on whether we are opening the FIFO for reading or writing:
+
+- If the FIFO is being opened for reading, and no process currently has the write end of the FIFO open, then the `open()` call succeeds immediately ( just as though the other end of the FIFO was already open).
+
+- If the FIFO is being opened FIFO for writing, and the other end of the FIFO is not already open for reading, then `open()` fails, setting errno to `ENXIO`.
+
+Using the `O_NONBLOCK` flag when opening a FIFO serves two main purposes:
+
+- It allows a single process to open both ends of a FIFO. The process first opens the FIFO for reading specifying `O_NONBLOCK`, and then opens the FIFO for writing.
+
+- It prevents deadlocks between processes opening two FIFOs.
+
+---
+
+## Semantics of `read()` and `write()` on Pipes and FIFOs
