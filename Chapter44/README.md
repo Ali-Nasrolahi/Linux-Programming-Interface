@@ -17,6 +17,7 @@
   - [A Client-Server Application Using FIFOs](#a-client-server-application-using-fifos)
   - [Nonblocking I/O](#nonblocking-io)
   - [Semantics of `read()` and `write()` on Pipes and FIFOs](#semantics-of-read-and-write-on-pipes-and-fifos)
+  - [END](#end)
 
 ## Overview
 
@@ -153,3 +154,11 @@ Using the `O_NONBLOCK` flag when opening a FIFO serves two main purposes:
 ---
 
 ## Semantics of `read()` and `write()` on Pipes and FIFOs
+
+The only difference between blocking and nonblocking reads occurs when no data is present and the write end is open. In this case, a normal `read()` blocks, while a nonblocking `read()` fails with the error `EAGAIN`.
+
+The `O_NONBLOCK` flag causes a `write()` on a pipe or FIFO to fail (with the error `EAGAIN`) in any case where data can’t be transferred immediately. This means that if we are writing up to `PIPE_BUF` bytes, then the `write()` will fail if there is not sufficient space in the pipe or FIFO, because the kernel can’t complete the operation immediately and can’t perform a partial write, since that would break the requirement that writes of up to `PIPE_BUF` bytes are **atomic**.
+
+---
+
+## END
